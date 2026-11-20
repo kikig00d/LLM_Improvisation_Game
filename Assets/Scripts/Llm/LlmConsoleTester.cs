@@ -21,7 +21,7 @@ namespace Improv.Llm
         [Header("연결")]
         [SerializeField] string baseUrl = "http://localhost:11434/v1";
         [Tooltip("위에서부터 차례로 같은 질문을 보낸다. 하나만 두면 그 모델만 쓴다.")]
-        [SerializeField] string[] models = { "llama3.1:8b" };
+        [SerializeField] string[] models = { "qwen3:8b" }; // Q2 결정 모델
         [SerializeField] int timeoutSeconds = 60;
         [SerializeField, Range(0f, 1.5f)] float temperature = 0.7f;
         [SerializeField] int maxTokens = 120;
