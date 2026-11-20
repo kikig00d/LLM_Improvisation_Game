@@ -541,6 +541,7 @@ GameObject:
   - component: {fileID: 416035416}
   - component: {fileID: 416035418}
   - component: {fileID: 416035417}
+  - component: {fileID: 416035419}
   m_Layer: 0
   m_Name: Door_Bedroom
   m_TagString: Untagged
@@ -630,6 +631,24 @@ BoxCollider2D:
   m_AutoTiling: 0
   m_Size: {x: 0.6, y: 2.2}
   m_EdgeRadius: 0
+--- !u!114 &416035419
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 416035415}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: df5896d5e99979040b70635221ecbae6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Improv.World.HoverHighlight
+  silhouetteMaterial: {fileID: 2100000, guid: c727d7cfdd0020f4fb3a2078ed2d735e, type: 2}
+  outlineWidth: 0.05
+  availableColor: {r: 1, g: 1, b: 1, a: 1}
+  unavailableColor: {r: 0.6, g: 0.6, b: 0.6, a: 0.45}
+  pulseMinAlpha: 0.55
+  pulseDuration: 0.6
 --- !u!1 &441551970
 GameObject:
   m_ObjectHideFlags: 0
@@ -1411,6 +1430,7 @@ GameObject:
   - component: {fileID: 1087341369}
   - component: {fileID: 1087341368}
   - component: {fileID: 1087341367}
+  - component: {fileID: 1087341370}
   m_Layer: 0
   m_Name: Box_A
   m_TagString: Untagged
@@ -1523,6 +1543,24 @@ BoxCollider2D:
   m_AutoTiling: 0
   m_Size: {x: 0.875, y: 0.75}
   m_EdgeRadius: 0
+--- !u!114 &1087341370
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1087341365}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: df5896d5e99979040b70635221ecbae6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Improv.World.HoverHighlight
+  silhouetteMaterial: {fileID: 2100000, guid: c727d7cfdd0020f4fb3a2078ed2d735e, type: 2}
+  outlineWidth: 0.05
+  availableColor: {r: 1, g: 1, b: 1, a: 1}
+  unavailableColor: {r: 0.6, g: 0.6, b: 0.6, a: 0.45}
+  pulseMinAlpha: 0.55
+  pulseDuration: 0.6
 --- !u!1 &1102500011
 GameObject:
   m_ObjectHideFlags: 0
@@ -2162,6 +2200,7 @@ GameObject:
   - component: {fileID: 1577261657}
   - component: {fileID: 1577261656}
   - component: {fileID: 1577261655}
+  - component: {fileID: 1577261658}
   m_Layer: 0
   m_Name: Player
   m_TagString: Untagged
@@ -2351,6 +2390,32 @@ MonoBehaviour:
   floorBandHeight: 3
   carryAnchor: {fileID: 441551971}
   logResults: 1
+--- !u!114 &1577261658
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1577261648}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7f946952faf1554478b2d0c70ebe0080, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Improv.Player.PlayerHoverFeedback
+  defaultCursor:
+    texture: {fileID: 2800000, guid: bb57a4c5a1ec38a41949d0975ede9ac1, type: 3}
+    hotspot: {x: 18, y: 6}
+  interactCursor:
+    texture: {fileID: 2800000, guid: e43eb6dc9e9ce1f47bac91c53a5246fc, type: 3}
+    hotspot: {x: 19, y: 6}
+  unavailableCursor:
+    texture: {fileID: 2800000, guid: 11ced191b585af049981750de4f6125d, type: 3}
+    hotspot: {x: 20, y: 5}
+  dropCursor:
+    texture: {fileID: 2800000, guid: daf580b39fe978f4f93d2871853610b2, type: 3}
+    hotspot: {x: 32, y: 32}
+  ghostValidColor: {r: 1, g: 1, b: 1, a: 0.45}
+  ghostInvalidColor: {r: 1, g: 0.3, b: 0.3, a: 0.35}
 --- !u!1 &1642359944
 GameObject:
   m_ObjectHideFlags: 0
@@ -2363,6 +2428,7 @@ GameObject:
   - component: {fileID: 1642359948}
   - component: {fileID: 1642359947}
   - component: {fileID: 1642359946}
+  - component: {fileID: 1642359949}
   m_Layer: 0
   m_Name: Box_C
   m_TagString: Untagged
@@ -2475,6 +2541,24 @@ BoxCollider2D:
   m_AutoTiling: 0
   m_Size: {x: 0.875, y: 0.75}
   m_EdgeRadius: 0
+--- !u!114 &1642359949
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1642359944}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: df5896d5e99979040b70635221ecbae6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Improv.World.HoverHighlight
+  silhouetteMaterial: {fileID: 2100000, guid: c727d7cfdd0020f4fb3a2078ed2d735e, type: 2}
+  outlineWidth: 0.05
+  availableColor: {r: 1, g: 1, b: 1, a: 1}
+  unavailableColor: {r: 0.6, g: 0.6, b: 0.6, a: 0.45}
+  pulseMinAlpha: 0.55
+  pulseDuration: 0.6
 --- !u!1001 &1806580157
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -2578,6 +2662,7 @@ GameObject:
   - component: {fileID: 1840870233}
   - component: {fileID: 1840870232}
   - component: {fileID: 1840870231}
+  - component: {fileID: 1840870234}
   m_Layer: 0
   m_Name: Box_B
   m_TagString: Untagged
@@ -2690,6 +2775,24 @@ BoxCollider2D:
   m_AutoTiling: 0
   m_Size: {x: 0.875, y: 0.75}
   m_EdgeRadius: 0
+--- !u!114 &1840870234
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1840870229}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: df5896d5e99979040b70635221ecbae6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Improv.World.HoverHighlight
+  silhouetteMaterial: {fileID: 2100000, guid: c727d7cfdd0020f4fb3a2078ed2d735e, type: 2}
+  outlineWidth: 0.05
+  availableColor: {r: 1, g: 1, b: 1, a: 1}
+  unavailableColor: {r: 0.6, g: 0.6, b: 0.6, a: 0.45}
+  pulseMinAlpha: 0.55
+  pulseDuration: 0.6
 --- !u!1 &1889621258
 GameObject:
   m_ObjectHideFlags: 0

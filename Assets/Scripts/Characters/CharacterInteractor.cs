@@ -61,14 +61,25 @@ namespace Improv.Characters
         // #4. 바깥에 제공하는 행동
         // ==========================================
 
+        // 대상을 지금 사용할 수 있는지 미리 본다. 아무것도 바꾸지 않는다. (커서, 강조 표시, 나중에 NPC 판단용)
+        public InteractionResult PreviewInteract(Interactable target)
+        {
+            var result = CheckReach(target.ClosestPoint(ReachOrigin), target);
+            return result == InteractionResult.Done ? target.CanInteract(this) : result;
+        }
+
         // 대상을 사용한다. 대상이 무엇을 할지는 대상이 정한다 (문은 여닫고, 상자는 들린다).
         public InteractionResult TryInteract(Interactable target)
         {
-            var result = CheckReach(target.ClosestPoint(ReachOrigin), target);
+            var result = PreviewInteract(target);
             if (result == InteractionResult.Done) result = target.Interact(this);
             Log($"{target.name} 상호작용", result);
             return result;
         }
+
+        // 클릭한 곳에 내려놓으면 어떻게 될지 미리 본다. 성공이면 실제로 놓일 위치도 알려준다.
+        public InteractionResult PreviewDrop(Vector2 clickPoint, out Vector2 floorPosition) =>
+            CheckDrop(clickPoint, out floorPosition);
 
         // Carryable.Interact가 부른다. 거리 검사는 TryInteract에서 이미 끝났다.
         public InteractionResult TryPickUp(Carryable item)
@@ -111,7 +122,33 @@ namespace Improv.Characters
             if (clickPoint.y < feetY - 0.5f || clickPoint.y > feetY + floorBandHeight)
                 return InteractionResult.WrongFloor;
 
-            floorPosition = new Vector2(clickPoint.x, feetY);
+            // 클릭한 자리부터 시작해, 겹치면 캐릭터에서 멀어지는 쪽으로 조금씩 밀며 빈자리를 찾는다. [가정]
+            // 캐릭터 바로 앞을 클릭해도 몸과 겹치지 않는 가장 가까운 자리에 놓이게 하려는 것.
+            float awayFromMe = Mathf.Sign(clickPoint.x - motor.FeetPosition.x);
+            if (awayFromMe == 0f) awayFromMe = 1f;
+
+            var firstFailure = InteractionResult.NoSpace;
+            for (int step = 0; step <= DropSearchSteps; step++)
+            {
+                var candidate = new Vector2(clickPoint.x + awayFromMe * step * DropSearchStep, feetY);
+                var result = CheckDropSpot(candidate);
+                if (result == InteractionResult.Done)
+                {
+                    floorPosition = candidate;
+                    return InteractionResult.Done;
+                }
+                if (step == 0) firstFailure = result;
+                // 손이 닿지 않거나 가로막혔으면 더 멀리 가 봐야 소용없다.
+                if (result == InteractionResult.OutOfRange || result == InteractionResult.Blocked) break;
+            }
+            return firstFailure;
+        }
+
+        const int DropSearchSteps = 20;      // 최대 몇 번 밀어 볼지
+        const float DropSearchStep = 0.05f;  // 한 번에 미는 거리 (유닛). 20 × 0.05 = 최대 1유닛
+
+        InteractionResult CheckDropSpot(Vector2 floorPosition)
+        {
             var center = floorPosition + Held.FootprintOffset;
 
             var reach = CheckReach(center, null);

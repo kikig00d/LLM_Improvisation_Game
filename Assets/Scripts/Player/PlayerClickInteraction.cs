@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using Improv.Characters;
 using Improv.World;
 using UnityEngine;
@@ -29,8 +28,6 @@ namespace Improv.Player
         InputAction interactAction;
         InputAction pointAction;
         Camera cam;
-        readonly List<Collider2D> pickBuffer = new();
-        ContactFilter2D everything;
 
         // ==========================================
         // #3. 유니티 생명주기
@@ -42,9 +39,6 @@ namespace Improv.Player
             interactAction = InputSystem.actions?.FindAction(interactActionName);
             pointAction = InputSystem.actions?.FindAction(pointActionName);
             cam = Camera.main;
-
-            // 클릭 판정은 트리거(문 클릭 영역)도 잡아야 한다.
-            everything = ContactFilter2D.noFilter;
 
             if (interactAction == null || pointAction == null || cam == null)
             {
@@ -64,12 +58,11 @@ namespace Improv.Player
         {
             // WasPressedThisFrame: 이번 프레임에 눌린 순간에만 true. 누르고 있는 동안 계속 true가 아니다.
             if (!interactAction.WasPressedThisFrame()) return;
-
-            // 화면 픽셀 좌표 → 월드 좌표. 2D라 z는 무시한다.
-            Vector2 screen = pointAction.ReadValue<Vector2>();
-            Vector2 world = cam.ScreenToWorldPoint(screen);
-            HandleClick(world);
+            HandleClick(PointerWorldPosition());
         }
+
+        // 화면 픽셀 좌표 → 월드 좌표. 2D라 z는 무시한다. 호버 피드백도 같은 값을 쓴다.
+        public Vector2 PointerWorldPosition() => cam.ScreenToWorldPoint(pointAction.ReadValue<Vector2>());
 
         // ==========================================
         // #4. 클릭 처리 (테스트에서도 직접 부를 수 있게 public)
@@ -77,22 +70,10 @@ namespace Improv.Player
 
         public InteractionResult HandleClick(Vector2 worldPoint)
         {
-            var target = FindInteractableAt(worldPoint);
+            var target = InteractableLookup.FindAt(worldPoint);
             if (target != null) return interactor.TryInteract(target);
             if (interactor.Held != null) return interactor.TryDropAt(worldPoint);
             return InteractionResult.NothingHeld;
-        }
-
-        Interactable FindInteractableAt(Vector2 worldPoint)
-        {
-            int count = Physics2D.OverlapPoint(worldPoint, everything, pickBuffer);
-            for (int i = 0; i < count; i++)
-            {
-                // 충돌체가 자식 오브젝트에 있어도 부모의 Interactable을 찾는다.
-                var interactable = pickBuffer[i].GetComponentInParent<Interactable>();
-                if (interactable != null && interactable.enabled) return interactable;
-            }
-            return null;
         }
     }
 }

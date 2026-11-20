@@ -27,10 +27,13 @@
 - UI에 `OnGUI`를 쓰지 않는다.
 - 상호작용 대상은 `Interactable`을 상속한다 (`Door`, `Carryable`). 캐릭터의 손은 `CharacterInteractor`이고, 결과는 `InteractionResult`로 이유까지 돌려준다.
 - 운반 가능 오브젝트(`Carryable`)는 상자뿐 아니라 시체 등도 포함한다. 계단은 운반한 채로 쓸 수 있다.
+- 행동마다 부작용 없는 미리보기(`PreviewInteract`, `PreviewDrop`, `Interactable.CanInteract`)를 두고, 실제 행동은 같은 판정을 거친다. 커서·강조 표시(`PlayerHoverFeedback`, `HoverHighlight`)는 미리보기만 보여준다.
+- 새 상호작용 오브젝트에는 `HoverHighlight`를 붙이고 `Assets/Art/Materials/HoverSilhouette.mat`을 연결한다.
+- Asset Store 무료 에셋은 Package Manager 내부 API(`script eval --internals true`, `IAssetStoreDownloadManager.Download(productId)`)로 받고 `AssetDatabase.ImportPackage(path, false)`로 가져올 수 있다. 계정에 먼저 추가돼 있어야 한다.
 
 ## 에셋
 
-- Easy Chara(플레이어 외형), Pixel Adventure 1(상자 그림), DOTween(연출)은 모두 **임시**다. 게임에 맞거나 대안이 없을 때만 쓴다.
+- Easy Chara(플레이어 외형), Pixel Adventure 1(상자 그림), DOTween(연출), Basic RPG Cursors(커서, `Assets/Cursors`)는 모두 **임시**다. 게임에 맞거나 대안이 없을 때만 쓴다.
 - 로직은 그림에 의존하지 않는다. 외형은 캐릭터의 `Visual` 자식, 오브젝트의 `Visual` 자식으로만 두고 갈아 끼울 수 있게 한다.
 - 무료 에셋을 새로 받는 것은 사용자가 허락했다 (유니티 에셋 스토어, 무료, 별점 4 이상, 적절할 때만).
 - DOTween: 새 트윈을 만들기 **전에** `DOKill()`을 부른다. 만든 뒤에 부르면 방금 만든 트윈까지 죽는다.

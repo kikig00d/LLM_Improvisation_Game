@@ -59,7 +59,17 @@ namespace Improv.World
         // #4. 상호작용: 클릭하면 줍기를 시도한다
         // ==========================================
 
+        public override InteractionResult CanInteract(CharacterInteractor actor)
+        {
+            if (actor.Held != null) return InteractionResult.HandsFull;
+            if (Holder != null || IsTweening) return InteractionResult.Busy;
+            return InteractionResult.Done;
+        }
+
         public override InteractionResult Interact(CharacterInteractor actor) => actor.TryPickUp(this);
+
+        // 내려놓을 자리 미리보기에 쓸 대표 그림. 외형(Visual)의 첫 번째 스프라이트.
+        public SpriteRenderer MainRenderer => renderers.Length > 0 ? renderers[0] : null;
 
         // CharacterInteractor가 부른다. 직접 부르지 않는다.
         internal void AttachTo(CharacterInteractor holder, Transform anchor)

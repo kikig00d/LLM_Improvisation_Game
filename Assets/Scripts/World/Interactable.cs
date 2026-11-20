@@ -17,6 +17,11 @@ namespace Improv.World
         public Vector2 ClosestPoint(Vector2 from) =>
             InteractionCollider != null ? InteractionCollider.ClosestPoint(from) : (Vector2)transform.position;
 
+        // 지금 이 캐릭터가 사용할 수 있는지 "묻기만" 한다. 아무것도 바꾸지 않는다.
+        // 커서와 강조 표시가 매 프레임 부르므로 부작용이 없어야 한다. 거리와 가로막힘은 CharacterInteractor가 따로 본다.
+        // virtual: 기본 동작이 있고, 필요한 클래스만 override로 바꾼다. (abstract는 반드시 바꿔야 함)
+        public virtual InteractionResult CanInteract(CharacterInteractor actor) => InteractionResult.Done;
+
         // 캐릭터가 이 오브젝트를 사용할 때 무슨 일이 일어나는지. 상속한 클래스가 반드시 구현한다.
         public abstract InteractionResult Interact(CharacterInteractor actor);
     }
