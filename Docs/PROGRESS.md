@@ -7,7 +7,17 @@
 
 - 브랜치: `main`. M1, M2와 마우스 피드백까지 합쳐졌다. 작업할 때는 마일스톤마다 `feature/m<번호>-<이름>` 브랜치를 만들고, 사용자가 직접 확인한 뒤 main에 fast-forward로 합친다.
 - 씬: `Assets/Scenes/Lodge.unity` 하나. 1층 거실, 2층 개인실, 계단, 계단참과 개인실 사이의 문, 상자 3개(Box_A·B는 거실, Box_C는 개인실), 플레이어.
-- 다음 할 일: **M3 (로컬 LLM 연결)**
+- 진행 중: **M3 (로컬 LLM 연결)**, 브랜치 `feature/m3-llm-link`. 구현과 시뮬레이션 검증 끝, 사용자 확인과 Q2 모델 선택 대기.
+
+## M3 진행 기록 (2026-11-20)
+
+- Ollama 0.40.16 설치(winget, 사용자 계정 설치라 관리자 권한 불필요). 실행 파일 `%LOCALAPPDATA%\Programs\Ollama\ollama.exe`. 서버는 자동 실행되어 `http://localhost:11434`.
+- 받은 모델: `llama3.1:8b`(4.9GB), `exaone3.5:7.8b`(4.8GB), `qwen3:8b`(5.2GB).
+- 코드: `Assets/Scripts/Llm/` — `ILlmClient`(갈아 끼우는 약속), `OpenAiCompatibleClient`(/v1/chat/completions), `LlmDebugLog`(요청·응답·시간을 Console과 `Logs/llm_debug.log`에), `LlmConsoleTester`(M3 확인·모델 비교용, M4에서 지움). 씬의 `LlmTester` 오브젝트에 붙어 있고 Play 시작 때 자동으로 보낸다.
+- qwen3는 생각하는 모델이라 `reasoning_effort: "none"`으로 생각을 끈다. 다른 모델은 이 값을 무시한다 (확인함).
+- 측정: 세 모델 모두 짧은 대사 0.2~0.3초, 첫 호출(모델 적재) 4~5초. VRAM 12GB에는 한 번에 한 모델만 올라가므로 모델을 바꾸면 다시 4~5초.
+- E-004: 1.5초가 넘으면 `(생각 중...)` 로그. E-005: 없는 모델(HTTP 404), 꺼진 서버(연결 실패) 모두 빨간 오류 + NPC "..." 확인.
+- 1차 품질 관찰(온도 0.7, 각 1회라 표본이 작음): 세 모델 모두 비밀(열쇠 분실)을 쉽게 털어놓는다. llama는 존댓말이 섞이고 띄어쓰기가 틀린다. exaone은 말투가 가장 자연스럽지만 괄호 규칙을 어겼다. qwen3는 말투가 투박하고 둘러대기도 했다.
 
 ## 완료한 마일스톤
 
@@ -29,7 +39,7 @@
 
 - Windows 11, i9-13900, RAM 32GB, **RTX 4070 (VRAM 12GB)**. 8B급 모델은 쾌적, 14B급까지 가능.
 - Unity 6000.3.14f1 (URP 2D), Unity CLI 1.0.1, Git. 유니티 클라우드 연결은 꺼져 있다 (생성 때 키링 오류로 실패, 필요 없어서 보류).
-- Ollama는 아직 설치되지 않았다.
+- Ollama 0.40.16 설치됨 (위 M3 진행 기록 참고).
 
 ## 작업하며 얻은 교훈
 
