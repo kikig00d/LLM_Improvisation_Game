@@ -127,6 +127,11 @@ namespace Improv.Characters
             body.linearVelocity = Vector2.zero;
             body.bodyType = RigidbodyType2D.Kinematic;
 
+            // 걸을 때 건 세로 잠금(FreezePositionY)을 푼다.
+            // 잠금은 Kinematic의 MovePosition에도 적용되므로, 풀지 않으면 x만 계단을 따라가고 y는 멈춘다.
+            // (실제로 이 버그가 있었다: 옆으로 걷다가 도착 순간 위층으로 순간이동)
+            body.constraints = RigidbodyConstraints2D.FreezeRotation;
+
             // 계단 끝점으로 붙인다. 입구 범위 안에서 조금 떨어져 있었다면 살짝 순간이동한다. [가정]
             body.MovePosition(stairs.PointAt(climbProgress));
         }
