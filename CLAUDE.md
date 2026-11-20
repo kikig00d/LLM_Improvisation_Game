@@ -25,6 +25,15 @@
 - 튜닝 값은 `[SerializeField]`로 Inspector에 노출하고, 필수 참조는 `Awake`에서 검사해 `Debug.LogError(..., this)`로 알린다.
 - 입력은 프로젝트 전역 액션(`InputSystem.actions`, `Assets/InputSystem_Actions.inputactions`)을 쓴다. 옛 `Input.GetKey`는 쓰지 않는다.
 - UI에 `OnGUI`를 쓰지 않는다.
+- 상호작용 대상은 `Interactable`을 상속한다 (`Door`, `Carryable`). 캐릭터의 손은 `CharacterInteractor`이고, 결과는 `InteractionResult`로 이유까지 돌려준다.
+- 운반 가능 오브젝트(`Carryable`)는 상자뿐 아니라 시체 등도 포함한다. 계단은 운반한 채로 쓸 수 있다.
+
+## 에셋
+
+- Easy Chara(플레이어 외형), Pixel Adventure 1(상자 그림), DOTween(연출)은 모두 **임시**다. 게임에 맞거나 대안이 없을 때만 쓴다.
+- 로직은 그림에 의존하지 않는다. 외형은 캐릭터의 `Visual` 자식, 오브젝트의 `Visual` 자식으로만 두고 갈아 끼울 수 있게 한다.
+- 무료 에셋을 새로 받는 것은 사용자가 허락했다 (유니티 에셋 스토어, 무료, 별점 4 이상, 적절할 때만).
+- DOTween: 새 트윈을 만들기 **전에** `DOKill()`을 부른다. 만든 뒤에 부르면 방금 만든 트윈까지 죽는다.
 
 ## 주석 스타일
 

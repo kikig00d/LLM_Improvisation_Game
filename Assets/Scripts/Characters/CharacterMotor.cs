@@ -32,12 +32,20 @@ namespace Improv.Characters
 
         Stairs currentStairs;     // 지금 오르고 있는 계단. null이면 걷는 중
         float climbProgress;      // 계단 위의 위치. 0 = 아래 끝, 1 = 위 끝
+        Vector2 lastStepPosition; // 지난 물리 틱의 위치. 실제 속도 측정용
 
         // ==========================================
         // #3. 바깥에 제공하는 기능
         // ==========================================
 
         public bool IsClimbing => currentStairs != null;
+
+        // 지난 물리 틱 동안 실제로 움직인 속도 (유닛/초). 벽에 막혀 있으면 0에 가깝다.
+        // 애니메이션, 나중에 NPC의 "누가 뛰어갔다" 같은 인지에 쓴다.
+        public Vector2 Velocity { get; private set; }
+
+        // 조종자가 원하는 방향. 벽에 막혀 실제로 못 움직여도 이 값은 남는다.
+        public Vector2 MoveInput => moveInput;
 
         // 캐릭터의 발 위치. 이 프로젝트에서 캐릭터 오브젝트의 기준점(pivot)은 발이다.
         public Vector2 FeetPosition => body.position;
@@ -59,12 +67,17 @@ namespace Improv.Characters
             body.gravityScale = 0f;                              // 중력 없음. 높이는 층이 정한다
             body.interpolation = RigidbodyInterpolation2D.Interpolate;  // 물리 틱 사이를 부드럽게 보간
             ApplyWalkingConstraints();
+            lastStepPosition = body.position;
         }
 
         // FixedUpdate: 물리 엔진의 고정 간격(기본 0.02초)마다 불린다.
         // Rigidbody를 움직이는 코드는 Update가 아니라 여기에 둔다.
         void FixedUpdate()
         {
+            // 지난 틱의 이동 결과로 실제 속도를 잰다. 물리 위치는 틱마다만 바뀌므로 틱 단위로 재야 정확하다.
+            Velocity = (body.position - lastStepPosition) / Time.fixedDeltaTime;
+            lastStepPosition = body.position;
+
             if (IsClimbing)
             {
                 Climb(moveInput.y);
