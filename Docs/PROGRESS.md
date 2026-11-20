@@ -7,7 +7,8 @@
 
 - 브랜치: `main`. M1, M2와 마우스 피드백까지 합쳐졌다. 작업할 때는 마일스톤마다 `feature/m<번호>-<이름>` 브랜치를 만들고, 사용자가 직접 확인한 뒤 main에 fast-forward로 합친다.
 - 씬: `Assets/Scenes/Lodge.unity` 하나. 1층 거실, 2층 개인실, 계단, 계단참과 개인실 사이의 문, 상자 3개(Box_A·B는 거실, Box_C는 개인실), 플레이어.
-- 진행 중: **M3 (로컬 LLM 연결)**, 브랜치 `feature/m3-llm-link`. 구현과 시뮬레이션 검증 끝, 사용자 확인과 Q2 모델 선택 대기.
+- M3까지 main에 합쳐졌다 (2026-11-20 사용자 확인).
+- 다음 할 일: **Q2 모델 선택**(사용자 결정 대기) 후 **M4 (NPC 1명과 대화)**. M4 전에 사용자에게 NPC 인지 노트를 다시 받고, 비밀을 쉽게 털어놓는 문제를 프롬프트로 다룬다.
 
 ## M3 진행 기록 (2026-11-20)
 
@@ -26,6 +27,7 @@
 | M1 | "층 + x좌표" 이동, 계단 오르내리기, 방 추적 | `CharacterMotor`, `PlayerInputDriver`, `Stairs`, `Room`, `RoomPresence` |
 | M2 | 문 여닫기, 운반(계단 포함), 손이 닿는 거리·가로막힘·겹침 판정 | `Interactable`, `Door`, `Carryable`, `CharacterInteractor`, `PlayerClickInteraction`, `CharacterAnimator` |
 | M2+ | 하얀 빛 강조, 커서 아이콘, 놓일 자리 미리보기, 겹치면 빈자리로 밀어 놓기(R-007b) | `HoverHighlight`, `PlayerHoverFeedback`, `InteractableLookup`, `SpriteSilhouette.shader` |
+| M3 | 로컬 LLM 연결(Ollama), 화이트박스 디버그 로그, E-004·E-005 | `ILlmClient`, `OpenAiCompatibleClient`, `LlmDebugLog`, `LlmConsoleTester` |
 
 ## M3 결정 사항 (2026-11-20, 사용자 승인)
 
