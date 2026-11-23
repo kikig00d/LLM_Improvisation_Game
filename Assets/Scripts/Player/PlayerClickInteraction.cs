@@ -60,6 +60,8 @@ namespace Improv.Player
         {
             // WasPressedThisFrame: 이번 프레임에 눌린 순간에만 true. 누르고 있는 동안 계속 true가 아니다.
             if (!interactAction.WasPressedThisFrame()) return;
+            // 시계 버튼·대화창 같은 UI 위의 클릭은 월드로 넘기지 않는다 (상자를 든 채 버튼을 누르면 내려놓아 버리는 일 방지).
+            if (Improv.UI.UiPointer.IsOverSolidUI(pointAction.ReadValue<Vector2>())) return;
             HandleClick(PointerWorldPosition());
         }
 

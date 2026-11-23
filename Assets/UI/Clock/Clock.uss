@@ -1,0 +1,85 @@
+/* 시계 UI 모양. Dialogue.uss와 같은 글꼴을 쓴다. */
+.clock, .sleep-overlay, .pause-banner {
+    -unity-font-definition: url("project://database/Assets/Fonts/NotoSansKR/NotoSansKR-Regular.otf");
+}
+
+/* ===== 오른쪽 위 시계 ===== */
+.clock {
+    position: absolute;
+    top: 10px; right: 10px;
+    padding: 8px 12px;
+    background-color: rgba(16, 20, 30, 0.85);
+    border-radius: 10px;
+    border-width: 1px;
+    border-color: rgba(255, 255, 255, 0.15);
+    align-items: flex-end;
+}
+
+.clock-time {
+    color: rgb(235, 238, 245);
+    font-size: 22px;
+    margin-bottom: 6px;
+}
+
+.speed-row {
+    flex-direction: row;
+}
+
+.speed-button {
+    min-width: 46px;
+    height: 30px;
+    margin: 0 0 0 4px;
+    padding: 0 6px;
+    font-size: 16px;
+    color: rgb(210, 214, 224);
+    background-color: rgba(255, 255, 255, 0.08);
+    border-width: 1px;
+    border-color: rgba(255, 255, 255, 0.18);
+    border-radius: 6px;
+}
+
+.speed-button:hover {
+    background-color: rgba(255, 255, 255, 0.18);
+}
+
+/* 지금 고른 속도 */
+.speed-button--on {
+    background-color: rgb(90, 140, 220);
+    border-color: rgb(150, 190, 255);
+    color: rgb(255, 255, 255);
+}
+
+/* 아직 못 쓰는 단계 (4배는 계획서 T-5 뒤에 연다) */
+.speed-button:disabled {
+    opacity: 0.35;
+}
+
+/* ===== 멈춤 표시 ===== */
+.pause-banner {
+    position: absolute;
+    top: 14px;
+    left: 0; right: 0;
+    -unity-text-align: middle-center;
+    font-size: 26px;
+    color: rgb(255, 230, 150);
+    -unity-font-style: bold;
+    text-shadow: 2px 2px 3px rgba(0, 0, 0, 0.8);
+    display: none;
+}
+
+/* ===== 잠 ===== */
+.sleep-overlay {
+    position: absolute;
+    left: 0; top: 0; right: 0; bottom: 0;
+    background-color: rgba(5, 8, 20, 0.35);   /* 감은 눈이라 안개가 이미 화면을 덮는다. 말풍선은 읽히게 옅게 */
+    justify-content: center;
+    align-items: center;
+    display: none;
+}
+
+.sleep-text {
+    color: rgb(200, 210, 235);
+    font-size: 24px;
+    -unity-text-align: middle-center;
+    white-space: normal;
+}

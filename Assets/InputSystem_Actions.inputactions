@@ -1020,6 +1020,96 @@
                     "isPartOfComposite": false
                 }
             ]
+        },
+        {
+            "name": "Game",
+            "id": "b102f307-c2d6-427e-ae19-fff8e3bae0e7",
+            "actions": [
+                {
+                    "name": "Pause",
+                    "type": "Button",
+                    "id": "07aa2471-50cc-4721-bb76-c0b1032d391b",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "SpeedUp",
+                    "type": "Button",
+                    "id": "a073b370-7599-4f77-b812-388a739f3c4d",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "SpeedDown",
+                    "type": "Button",
+                    "id": "22215435-f2f7-458e-ac4b-362711e2098f",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                }
+            ],
+            "bindings": [
+                {
+                    "name": "",
+                    "id": "9defa8c2-cd38-4ebd-a22f-f3ad71ced018",
+                    "path": "<Keyboard>/p",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Pause",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "e41ccb06-4774-4086-bd47-54ed17cb4202",
+                    "path": "<Keyboard>/equals",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "SpeedUp",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "cb4b443b-c213-416c-8f3d-b7305b77de37",
+                    "path": "<Keyboard>/numpadPlus",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "SpeedUp",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "ee4e573d-54f0-41d4-89a7-b0717a7297f7",
+                    "path": "<Keyboard>/minus",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "SpeedDown",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "1131204e-397b-41c1-899e-2e8f70e4c5ac",
+                    "path": "<Keyboard>/numpadMinus",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "SpeedDown",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                }
+            ]
         }
     ],
     "controlSchemes": [

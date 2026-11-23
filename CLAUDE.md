@@ -23,6 +23,8 @@
 - `Assets/Scripts/World`: 방, 계단 같은 월드 데이터. `Assets/Scripts/Characters`: 플레이어와 NPC가 함께 쓰는 몸과 상태(`Speech`: 입 `Speaker`, 귀 `Hearing` / `Sight`: 눈 `Vision`, 보일 수 있는 것 `SightTarget`). `Assets/Scripts/Player`: 플레이어 전용 입력. `Assets/Scripts/Npc`: NPC 두뇌와 캐릭터 시트. `Assets/Scripts/Llm`: LLM 연결. `Assets/Scripts/UI`: 대화창, 말풍선.
 - 말은 대상을 고르지 않는다. `Speaker.Say()` → `SpeechSystem`이 청각 범위 안의 `Hearing`에만 전달한다. 플레이어 대화 기록과 NPC가 LLM에 넘기는 내용은 모두 귀를 통과한 말뿐이다 (P-1, P-3).
 - 보는 것도 같다. `Vision.CanSee()`가 유일한 판정이고, 화면 안개(`FogOfWarView`), 클릭 대상, NPC가 LLM에 넘기는 "보이는 사람"이 모두 이 판정을 쓴다. 층 바닥처럼 충돌체 없이 시야만 막는 것은 `SightBlocker`, 몸은 막지만 눈은 안 막는 것은 `SeeThrough`.
+- 시간은 `GameClock` 하나가 정하고 속도를 `Time.timeScale`로 건다. 그래서 `Time.time`/`Time.deltaTime`이 곧 게임 시간이다(멈추면 0). 실제 시간이 필요한 곳(깨우기 입력 지연 등)만 `Time.unscaledTime`을 쓰고, 실제 시간으로 오는 LLM 답은 `GameClock.IsPaused` 동안 들고 있다가 쓴다.
+- UI 위의 클릭이 월드로 넘어가지 않게 막을 요소에는 USS 클래스 `ui-solid`를 붙인다 (`UiPointer`).
 - UI는 UI Toolkit(UXML/USS, `Assets/UI`)으로 만들고 글꼴은 Noto Sans KR을 쓴다. 튜닝 데이터(캐릭터 시트, LLM 설정)는 ScriptableObject 에셋(`Assets/Data`)에 둔다.
 - 캐릭터의 몸(`CharacterMotor`)과 조종자(`PlayerInputDriver`, 나중에 NPC AI)를 분리한다. NPC는 같은 몸을 `SetMoveInput()`으로 움직인다.
 - 이동은 "층 + x좌표" 모델이다. 걸을 때 y를 잠그고, 계단은 Kinematic으로 경로를 따라간다. 캐릭터 기준점(pivot)은 발이다.

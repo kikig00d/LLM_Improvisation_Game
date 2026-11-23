@@ -1,0 +1,21 @@
+<!--
+  시계와 시간 속도 UI (R-017a). 모양은 Clock.uss가 정한다.
+  ui-solid 클래스: 이 위의 클릭은 뒤의 월드로 넘어가지 않는다 (UiPointer).
+-->
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <Style src="Clock.uss" />
+
+    <!-- 자는 동안 화면을 어둡게 덮는다. 마우스는 통과 (깨기는 아무 키/클릭으로 PlayerSleepInput이 처리). -->
+    <ui:VisualElement name="sleep-overlay" class="sleep-overlay" picking-mode="Ignore">
+        <ui:Label name="sleep-text" class="sleep-text" picking-mode="Ignore" />
+    </ui:VisualElement>
+
+    <!-- 멈췄을 때 화면 위쪽 가운데에 뜨는 표시 -->
+    <ui:Label name="pause-banner" class="pause-banner" text="일시정지 · P로 풀기" picking-mode="Ignore" />
+
+    <!-- 오른쪽 위 시계와 속도 버튼 (크루세이더 킹즈처럼) -->
+    <ui:VisualElement name="clock-panel" class="clock ui-solid">
+        <ui:Label name="clock-time" class="clock-time" />
+        <ui:VisualElement name="speed-buttons" class="speed-row" />
+    </ui:VisualElement>
+</ui:UXML>

@@ -45,6 +45,7 @@ namespace Improv.Characters.Sight
         float gazeAngle;          // 지금 시선 각도 (도). 0 = 오른쪽, 90 = 위, 180 = 왼쪽
         Vector2? lookTarget;      // 바라볼 곳. Vector2? 는 "값이 없을 수도 있는 Vector2" (C로 치면 bool has + 값 한 쌍)
         bool zoomed;
+        bool eyesClosed;          // 자는 중 (R-018). 감으면 아무것도 안 보인다
 
         readonly List<RaycastHit2D> hitBuffer = new();
         ContactFilter2D solidOnly;
@@ -57,6 +58,7 @@ namespace Improv.Characters.Sight
         public float ViewDistance => viewDistance * (zoomed ? zoomDistanceMultiplier : 1f);
         public float FieldOfView => fieldOfView * (zoomed ? zoomFovMultiplier : 1f);
         public float BackRadius => backRadius;
+        public bool EyesClosed => eyesClosed;
 
         // =====================================================================
         // #3. 유니티 생명주기
@@ -96,6 +98,9 @@ namespace Improv.Characters.Sight
         /// <summary>멀리 보기 (R-004). 시야가 길고 좁아진다.</summary>
         public void SetZoomed(bool on) => zoomed = on;
 
+        /// <summary>눈을 감는다 (잠, R-018). 감은 동안은 내 몸 말고는 아무것도 보이지 않는다. 안개도 화면 전체를 덮는다.</summary>
+        public void SetEyesClosed(bool closed) => eyesClosed = closed;
+
         float DesiredAngle()
         {
             if (lookTarget.HasValue)
@@ -117,6 +122,7 @@ namespace Improv.Characters.Sight
         {
             if (target == null || !target.isActiveAndEnabled) return false;
             if (target == self) return true;
+            if (eyesClosed) return false;
             foreach (Vector2 p in target.SamplePoints())
                 if (CanSeePoint(p, target)) return true;
             return false;
@@ -125,6 +131,7 @@ namespace Improv.Characters.Sight
         /// <summary>월드의 한 점이 보이는가. ignore는 가림 판정에서 뺄 대상(보려는 대상 자신).</summary>
         public bool CanSeePoint(Vector2 point, SightTarget ignore = null)
         {
+            if (eyesClosed) return false;
             Vector2 eye = EyePosition;
             Vector2 toPoint = point - eye;
             float distance = toPoint.magnitude;
@@ -141,6 +148,7 @@ namespace Improv.Characters.Sight
         /// <summary>눈에서 dir 방향으로 얼마나 멀리까지 보이나 (안개 그림용). maxDistance를 넘지 않는다.</summary>
         public float VisibleDistance(Vector2 dir, float maxDistance)
         {
+            if (eyesClosed) return 0f;   // 감은 눈: 안개가 눈 위치까지 덮는다
             Vector2 eye = EyePosition;
             float nearest = maxDistance;
             int count = Physics2D.Raycast(eye, dir, solidOnly, hitBuffer, maxDistance);

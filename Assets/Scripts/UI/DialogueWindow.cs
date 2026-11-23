@@ -113,7 +113,7 @@ namespace Improv.UI
             if (IsOpen) return;
             IsOpen = true;
             sentence.Clear();
-            input.SetValueWithoutNotify("");
+            ClearInput();
             composition = "";
             SetVisible(true);
             RefreshAll();
@@ -218,6 +218,16 @@ namespace Improv.UI
         // #6. 단어 고르기와 보내기 (테스트에서 직접 부를 수 있게 public)
         // =====================================================================
 
+        /// <summary>
+        /// 입력칸을 비운다. 글자만 지우면 입력칸 속 커서·선택 위치가 옛 글자 길이에 남아,
+        /// 다음 글자를 칠 때 유니티 내부에서 ArgumentOutOfRangeException이 난다(T-4 직접 확인 때 로그에서 발견). 커서도 맨 앞으로 돌린다.
+        /// </summary>
+        void ClearInput()
+        {
+            input.SetValueWithoutNotify("");
+            input.SelectRange(0, 0);
+        }
+
         public string TypedText() => ((input?.value ?? "") + composition).Trim();
 
         public void CommitSelected()
@@ -228,7 +238,7 @@ namespace Improv.UI
                 return;
             }
             sentence.Add(candidates[selected]);
-            input.SetValueWithoutNotify("");
+            ClearInput();
             composition = "";
             RefreshAll();
         }

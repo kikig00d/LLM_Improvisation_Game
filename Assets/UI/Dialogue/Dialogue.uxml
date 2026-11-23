@@ -9,7 +9,7 @@
     <ui:VisualElement name="bubble-layer" class="layer" picking-mode="Ignore" />
 
     <!-- 대화창 (R-014). 처음에는 숨겨 두고 스페이스로 연다. -->
-    <ui:VisualElement name="dialogue-window" class="window">
+    <ui:VisualElement name="dialogue-window" class="window ui-solid">
         <ui:ScrollView name="history" class="history" />
         <ui:VisualElement class="sentence-row">
             <ui:VisualElement name="chips" class="chips" />

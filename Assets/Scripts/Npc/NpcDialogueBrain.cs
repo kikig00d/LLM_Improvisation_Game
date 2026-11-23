@@ -5,6 +5,7 @@ using System.Threading;
 using Improv.Characters;
 using Improv.Characters.Speech;
 using Improv.Llm;
+using Improv.World;
 using UnityEngine;
 
 namespace Improv.Npc
@@ -169,6 +170,10 @@ namespace Improv.Npc
                     speaker.ShowThinking = false;
 
                     if (reply.Status == LlmStatus.Cancelled) return;
+
+                    // R-017a: LLM은 실제 시간으로 돌아서 멈춘 동안에도 답이 온다. 그 답은 들고 있다가 풀린 뒤 말한다.
+                    // NextFrameAsync는 시간 배율이 0이어도 화면 프레임마다 깨어난다.
+                    while (GameClock.Instance != null && GameClock.Instance.IsPaused) await Awaitable.NextFrameAsync(cancel);
 
                     if (!reply.Ok)
                     {
