@@ -162,6 +162,7 @@ GameObject:
   m_Component:
   - component: {fileID: 2043095}
   - component: {fileID: 2043096}
+  - component: {fileID: 2043097}
   m_Layer: 0
   m_Name: Floor1
   m_TagString: Untagged
@@ -243,6 +244,18 @@ SpriteRenderer:
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
   m_SpriteSortPoint: 0
+--- !u!114 &2043097
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2043094}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fb817267a19dde64e8af8d58a379e35a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Improv.World.SightBlocker
 --- !u!1 &42807232
 GameObject:
   m_ObjectHideFlags: 0
@@ -459,6 +472,7 @@ GameObject:
   m_Component:
   - component: {fileID: 98483095}
   - component: {fileID: 98483096}
+  - component: {fileID: 98483097}
   m_Layer: 0
   m_Name: Floor2
   m_TagString: Untagged
@@ -540,6 +554,18 @@ SpriteRenderer:
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
   m_SpriteSortPoint: 0
+--- !u!114 &98483097
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 98483094}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fb817267a19dde64e8af8d58a379e35a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Improv.World.SightBlocker
 --- !u!1 &119748377
 GameObject:
   m_ObjectHideFlags: 0
@@ -729,6 +755,7 @@ GameObject:
   - component: {fileID: 161543855}
   - component: {fileID: 161543854}
   - component: {fileID: 161543853}
+  - component: {fileID: 161543857}
   m_Layer: 0
   m_Name: UI
   m_TagString: Untagged
@@ -750,6 +777,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Improv.UI.SpeechBubbleOverlay
   worldCamera: {fileID: 0}
   listener: {fileID: 1577261660}
+  viewer: {fileID: 1577261662}
   baseDuration: 2.5
   perCharDuration: 0.12
 --- !u!114 &161543854
@@ -810,6 +838,24 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &161543857
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 161543852}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 41372d49e96cbcc4db935012f2335922, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Improv.UI.FogOfWarView
+  viewer: {fileID: 1577261662}
+  fogColor: {r: 0, g: 0, b: 0, a: 0.55}
+  rayCount: 180
+  fadeSpeed: 6
+  sortingOrder: 100
+  fogMaterial: {fileID: 0}
 --- !u!1 &196575481
 GameObject:
   m_ObjectHideFlags: 0
@@ -3438,6 +3484,7 @@ GameObject:
   - component: {fileID: 987363941}
   - component: {fileID: 987363940}
   - component: {fileID: 987363942}
+  - component: {fileID: 987363943}
   m_Layer: 0
   m_Name: Railing
   m_TagString: Untagged
@@ -3578,6 +3625,18 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Improv.World.SoundObstacle
   transmission: 1
+--- !u!114 &987363943
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 987363938}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b7eea3309e224094fb8a2c1bfca428e4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Improv.World.SeeThrough
 --- !u!1 &1002280005
 GameObject:
   m_ObjectHideFlags: 0
@@ -3933,6 +3992,7 @@ GameObject:
   - component: {fileID: 1087341368}
   - component: {fileID: 1087341367}
   - component: {fileID: 1087341370}
+  - component: {fileID: 1087341371}
   m_Layer: 0
   m_Name: Box_A
   m_TagString: Untagged
@@ -4063,6 +4123,18 @@ MonoBehaviour:
   unavailableColor: {r: 0.6, g: 0.6, b: 0.6, a: 0.45}
   pulseMinAlpha: 0.55
   pulseDuration: 0.6
+--- !u!114 &1087341371
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1087341365}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 347ae9221d39f6148906bebd20e4323e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Improv.Characters.Sight.SightTarget
 --- !u!1 &1097439522
 GameObject:
   m_ObjectHideFlags: 0
@@ -6125,6 +6197,9 @@ GameObject:
   - component: {fileID: 1577261661}
   - component: {fileID: 1577261660}
   - component: {fileID: 1577261659}
+  - component: {fileID: 1577261662}
+  - component: {fileID: 1577261664}
+  - component: {fileID: 1577261663}
   m_Layer: 8
   m_Name: Player
   m_TagString: Untagged
@@ -6375,6 +6450,9 @@ MonoBehaviour:
   closedDoorTransmission: 0.5
   ceilingTransmission: 0.6
   floorHeight: 3
+  noiseStartRatio: 0.6
+  maxNoise: 0.7
+  noiseSymbol: "\u25CB"
 --- !u!114 &1577261661
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -6390,6 +6468,55 @@ MonoBehaviour:
   displayName: "\uC190\uB2D8"
   mouthHeight: 1.5
   bubbleHeight: 2.1
+--- !u!114 &1577261662
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1577261648}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 855014ccaec36de49b6c653438f6eb4b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Improv.Characters.Sight.Vision
+  viewDistance: 8
+  fieldOfView: 120
+  turnSpeed: 180
+  backRadius: 0.6
+  eyeHeight: 1.5
+  zoomDistanceMultiplier: 1.5
+  zoomFovMultiplier: 0.5
+  minOccluderHeight: 0.5
+--- !u!114 &1577261663
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1577261648}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c7375718b1577424cb6d71b8e8bc9906, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Improv.Player.PlayerGazeInput
+  pointActionName: UI/Point
+  zoomActionName: Player/Zoom
+  worldCamera: {fileID: 0}
+  zoomCameraShift: 3
+  cameraSmoothTime: 0.15
+--- !u!114 &1577261664
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1577261648}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 347ae9221d39f6148906bebd20e4323e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Improv.Characters.Sight.SightTarget
 --- !u!1 &1578874500
 GameObject:
   m_ObjectHideFlags: 0
@@ -6730,6 +6857,7 @@ GameObject:
   - component: {fileID: 1642359947}
   - component: {fileID: 1642359946}
   - component: {fileID: 1642359949}
+  - component: {fileID: 1642359950}
   m_Layer: 0
   m_Name: Box_C
   m_TagString: Untagged
@@ -6860,6 +6988,18 @@ MonoBehaviour:
   unavailableColor: {r: 0.6, g: 0.6, b: 0.6, a: 0.45}
   pulseMinAlpha: 0.55
   pulseDuration: 0.6
+--- !u!114 &1642359950
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1642359944}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 347ae9221d39f6148906bebd20e4323e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Improv.Characters.Sight.SightTarget
 --- !u!1 &1651699104
 GameObject:
   m_ObjectHideFlags: 0
@@ -7471,6 +7611,7 @@ GameObject:
   - component: {fileID: 1840870232}
   - component: {fileID: 1840870231}
   - component: {fileID: 1840870234}
+  - component: {fileID: 1840870235}
   m_Layer: 0
   m_Name: Box_B
   m_TagString: Untagged
@@ -7601,6 +7742,18 @@ MonoBehaviour:
   unavailableColor: {r: 0.6, g: 0.6, b: 0.6, a: 0.45}
   pulseMinAlpha: 0.55
   pulseDuration: 0.6
+--- !u!114 &1840870235
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1840870229}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 347ae9221d39f6148906bebd20e4323e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Improv.Characters.Sight.SightTarget
 --- !u!1 &1841753225
 GameObject:
   m_ObjectHideFlags: 0
@@ -7888,6 +8041,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1889621259}
   - component: {fileID: 1889621260}
+  - component: {fileID: 1889621261}
   m_Layer: 0
   m_Name: Roof
   m_TagString: Untagged
@@ -7969,6 +8123,18 @@ SpriteRenderer:
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
   m_SpriteSortPoint: 0
+--- !u!114 &1889621261
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1889621258}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fb817267a19dde64e8af8d58a379e35a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Improv.World.SightBlocker
 --- !u!1 &1889887631
 GameObject:
   m_ObjectHideFlags: 0
@@ -8083,6 +8249,8 @@ GameObject:
   - component: {fileID: 1931264163}
   - component: {fileID: 1931264162}
   - component: {fileID: 1931264161}
+  - component: {fileID: 1931264172}
+  - component: {fileID: 1931264171}
   m_Layer: 8
   m_Name: Npc_HanDoyun
   m_TagString: Untagged
@@ -8128,6 +8296,9 @@ MonoBehaviour:
   closedDoorTransmission: 0.5
   ceilingTransmission: 0.6
   floorHeight: 3
+  noiseStartRatio: 0.6
+  maxNoise: 0.7
+  noiseSymbol: "\u25CB"
 --- !u!114 &1931264163
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -8298,6 +8469,38 @@ Transform:
   - {fileID: 1027532291}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1931264171
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1931264160}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 347ae9221d39f6148906bebd20e4323e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Improv.Characters.Sight.SightTarget
+--- !u!114 &1931264172
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1931264160}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 855014ccaec36de49b6c653438f6eb4b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Improv.Characters.Sight.Vision
+  viewDistance: 8
+  fieldOfView: 120
+  turnSpeed: 180
+  backRadius: 0.6
+  eyeHeight: 1.5
+  zoomDistanceMultiplier: 1.5
+  zoomFovMultiplier: 0.5
+  minOccluderHeight: 0.5
 --- !u!1 &1934946514
 GameObject:
   m_ObjectHideFlags: 0

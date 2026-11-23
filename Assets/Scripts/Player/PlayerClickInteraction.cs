@@ -28,6 +28,7 @@ namespace Improv.Player
         InputAction interactAction;
         InputAction pointAction;
         Camera cam;
+        Improv.Characters.Sight.Vision vision;   // 없어도 된다. 있으면 안 보이는 대상은 고르지 않는다
 
         // ==========================================
         // #3. 유니티 생명주기
@@ -39,6 +40,7 @@ namespace Improv.Player
             interactAction = InputSystem.actions?.FindAction(interactActionName);
             pointAction = InputSystem.actions?.FindAction(pointActionName);
             cam = Camera.main;
+            vision = GetComponent<Improv.Characters.Sight.Vision>();
 
             if (interactAction == null || pointAction == null || cam == null)
             {
@@ -70,10 +72,23 @@ namespace Improv.Player
 
         public InteractionResult HandleClick(Vector2 worldPoint)
         {
-            var target = InteractableLookup.FindAt(worldPoint);
+            var target = FindVisibleTarget(worldPoint);
             if (target != null) return interactor.TryInteract(target);
             if (interactor.Held != null) return interactor.TryDropAt(worldPoint);
             return InteractionResult.NothingHeld;
+        }
+
+        /// <summary>
+        /// 커서 아래의 상호작용 대상. 단, 플레이어 눈에 안 보이는 것(안개 속 상자 등)은 없는 것으로 친다 (R-011).
+        /// 클릭과 호버가 같은 규칙을 쓰도록 여기 한곳에 둔다.
+        /// </summary>
+        public Interactable FindVisibleTarget(Vector2 worldPoint)
+        {
+            var target = InteractableLookup.FindAt(worldPoint);
+            if (target == null || vision == null) return target;
+            var sightTarget = target.GetComponent<Improv.Characters.Sight.SightTarget>();
+            if (sightTarget != null && !vision.CanSee(sightTarget)) return null;
+            return target;
         }
     }
 }

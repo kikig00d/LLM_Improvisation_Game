@@ -9,11 +9,15 @@ namespace Improv.Npc
     /// </summary>
     public static class NpcPrompt
     {
-        public static string BuildSystem(NpcCharacterSheet sheet, string roomName, IReadOnlyList<string> longTermNotes)
+        public static string BuildSystem(NpcCharacterSheet sheet, string roomName, IReadOnlyList<string> visibleNames, IReadOnlyList<string> longTermNotes)
         {
             var sb = new StringBuilder();
             sb.AppendLine($"너는 {sheet.displayName}이다. {sheet.publicProfile}");
             sb.AppendLine($"지금 상황: 눈보라로 고립된 겨울 산장. 너는 지금 '{roomName}'에 있다.");
+            // R-011, P-3: 내 눈에 보이는 사람만 알려 준다. 등 뒤나 벽 너머 사람은 목소리로만 안다.
+            sb.AppendLine(visibleNames.Count > 0
+                ? $"지금 눈에 보이는 사람: {string.Join(", ", visibleNames)}. 그 밖의 사람은 보이지 않고 목소리만 들린다."
+                : "지금 눈에 보이는 사람은 없다. 들리는 목소리는 보이지 않는 곳에서 온다.");
             sb.AppendLine();
 
             // R-016d: 장기 기억. NPC가 집중해서 기억하기로 고른 것만 여기에 남는다.

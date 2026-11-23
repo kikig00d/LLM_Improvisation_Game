@@ -39,6 +39,8 @@ namespace Improv.Npc
         Hearing hearing;
         RoomPresence roomPresence;   // 없어도 된다. 있으면 지금 방 이름을 프롬프트에 넣는다
         CharacterAnimator characterAnimator;   // 없어도 된다. 있으면 LLM이 고를 때 돌아볼 수 있다
+        Improv.Characters.Sight.Vision vision;  // 없어도 된다. 있으면 지금 보이는 사람을 프롬프트에 넣는다 (P-3)
+        readonly List<Improv.Characters.Sight.SightTarget> seenBuffer = new();
         ILlmClient client;
 
         // 단기 기억: 들은 말과 내가 한 말, 그리고 그때의 시각. 시간이 지나면 잊는다 (R-016d).
@@ -55,6 +57,23 @@ namespace Improv.Npc
         static readonly Regex NamePrefix = new(@"^\s*[^\s:：]{1,10}\s*[:：]\s*");
 
         public bool IsBusy => busy;
+
+        /// <summary>
+        /// 지금 내 눈에 보이는 사람들의 이름 (R-011, P-3). 눈이 본 것만 LLM에 넘긴다.
+        /// 돌아보기(look_at)를 고르면 몸이 돌고, 다음 답부터는 돌아본 쪽 사람이 보인다.
+        /// </summary>
+        public List<string> VisibleNames()
+        {
+            var names = new List<string>();
+            if (vision == null) return names;
+            vision.CollectVisible(seenBuffer);
+            foreach (var target in seenBuffer)
+            {
+                var other = target.GetComponent<Speaker>();
+                if (other != null) names.Add(other.DisplayName);
+            }
+            return names;
+        }
         public int ShortTermCount => shortTerm.Count;
         public IReadOnlyList<string> LongTerm => longTerm;
 
@@ -68,6 +87,7 @@ namespace Improv.Npc
             hearing = GetComponent<Hearing>();
             roomPresence = GetComponent<RoomPresence>();
             characterAnimator = GetComponent<CharacterAnimator>();
+            vision = GetComponent<Improv.Characters.Sight.Vision>();
 
             if (sheet == null) { Debug.LogError($"[NpcDialogueBrain] '{name}'의 캐릭터 시트가 비어 있습니다.", this); enabled = false; return; }
             if (llm == null) { Debug.LogError($"[NpcDialogueBrain] '{name}'의 LLM 설정이 비어 있습니다.", this); enabled = false; return; }
@@ -108,7 +128,7 @@ namespace Improv.Npc
 
                     string room = roomPresence != null && roomPresence.CurrentRoom != null
                         ? roomPresence.CurrentRoom.DisplayName : "산장 안";
-                    var messages = new List<ChatMessage> { ChatMessage.System(NpcPrompt.BuildSystem(sheet, room, longTerm)) };
+                    var messages = new List<ChatMessage> { ChatMessage.System(NpcPrompt.BuildSystem(sheet, room, VisibleNames(), longTerm)) };
                     foreach (var memory in shortTerm) messages.Add(memory.message);
 
                     int ticket = ++requestTicket;

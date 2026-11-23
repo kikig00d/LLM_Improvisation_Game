@@ -20,6 +20,8 @@ namespace Improv.UI
         [SerializeField] Camera worldCamera;              // 비우면 Main Camera
         [Tooltip("이 귀에 들린 말만 말풍선으로 보인다 (R-016a). 보통 플레이어. 비우면 모든 말을 보인다(디버그용).")]
         [SerializeField] Hearing listener;
+        [Tooltip("생각 중 ... 표시는 소리가 아니라 모습이라, 이 눈에 보일 때만 뜬다 (F-6). 비우면 늘 뜬다.")]
+        [SerializeField] Improv.Characters.Sight.Vision viewer;
         [SerializeField] float baseDuration = 2.5f;       // 말풍선이 떠 있는 기본 시간 (초)
         [SerializeField] float perCharDuration = 0.12f;   // 글자 하나당 더 떠 있는 시간. 긴 말은 오래 읽게
 
@@ -90,7 +92,7 @@ namespace Improv.UI
                 if (speaker == null) { bubble.Label.RemoveFromHierarchy(); removeBuffer.Add(speaker); continue; }
 
                 bool talking = Time.time < bubble.HideAt;
-                bool thinking = !talking && speaker.isActiveAndEnabled && speaker.ShowThinking;
+                bool thinking = !talking && speaker.isActiveAndEnabled && speaker.ShowThinking && CanSee(speaker);
 
                 bubble.Label.style.display = talking || thinking ? DisplayStyle.Flex : DisplayStyle.None;
                 if (!talking && !thinking) continue;
@@ -104,6 +106,13 @@ namespace Improv.UI
                 bubble.Label.style.top = p.y;
             }
             foreach (var dead in removeBuffer) bubbles.Remove(dead);
+        }
+
+        bool CanSee(Speaker speaker)
+        {
+            if (viewer == null) return true;
+            var target = speaker.GetComponent<Improv.Characters.Sight.SightTarget>();
+            return target == null || viewer.CanSee(target);
         }
 
         Bubble GetOrCreate(Speaker speaker)

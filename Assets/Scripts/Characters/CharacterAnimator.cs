@@ -26,6 +26,7 @@ namespace Improv.Characters
         // ==========================================
 
         CharacterMotor motor;
+        Sight.Vision vision;     // 없어도 된다
         int currentState;
         int idleHash, walkHash;
         float baseScaleX;
@@ -37,6 +38,7 @@ namespace Improv.Characters
         void Awake()
         {
             motor = GetComponent<CharacterMotor>();
+            vision = GetComponent<Sight.Vision>();
             if (animator == null || visualRoot == null)
             {
                 Debug.LogError($"[CharacterAnimator] '{name}'의 animator 또는 visualRoot가 비어 있습니다.", this);
@@ -48,6 +50,7 @@ namespace Improv.Characters
             idleHash = Animator.StringToHash(idleState);
             walkHash = Animator.StringToHash(walkState);
             baseScaleX = Mathf.Abs(visualRoot.localScale.x);
+            FacingRight = (visualRoot.localScale.x >= 0f) == artFacesRight;   // 씬에 놓인 처음 방향
         }
 
         // LateUpdate: 모든 Update가 끝난 뒤에 불린다.
@@ -64,10 +67,21 @@ namespace Improv.Characters
             //  - 걸을 때는 "가려는 방향(입력)"을 본다. 벽을 밀 때 물리 반동으로 생기는 반대 방향 속도에 속지 않게.
             //  - 계단에서는 입력이 위/아래뿐이라, 실제로 움직이는 좌우 방향을 본다.
             //  - 둘 다 없으면 마지막 방향을 유지한다.
+            //  - 단, 눈(Vision)이 바라볼 곳을 받고 있으면(플레이어의 마우스) 몸은 시선 쪽을 본다 (R-003).
+            //    좀보이드처럼 뒷걸음질도 할 수 있다. 시선이 거의 수직일 때는 흔들리지 않게 그대로 둔다.
+            if (vision != null && vision.HasLookTarget)
+            {
+                float gazeX = vision.GazeDirection.x;
+                if (Mathf.Abs(gazeX) > 0.15f) SetFacing(gazeX > 0f);
+                return;
+            }
             float facingX = motor.IsClimbing ? velocity.x : motor.MoveInput.x;
             float threshold = motor.IsClimbing ? moveThreshold : 0.1f;
             if (Mathf.Abs(facingX) > threshold) SetFacing(facingX > 0f);
         }
+
+        /// <summary>몸이 오른쪽을 보고 있는가. 바라볼 곳이 없는 눈은 이 방향을 본다.</summary>
+        public bool FacingRight { get; private set; } = true;
 
         /// <summary>제자리에서 한 점을 바라본다. NPC가 말소리 쪽을 돌아볼 때 쓴다. 다음에 걸으면 다시 걷는 방향을 본다.</summary>
         public void FaceTowards(Vector2 point)
@@ -78,6 +92,7 @@ namespace Improv.Characters
 
         void SetFacing(bool faceRight)
         {
+            FacingRight = faceRight;
             float sign = (faceRight == artFacesRight) ? 1f : -1f;
             var s = visualRoot.localScale;
             visualRoot.localScale = new Vector3(baseScaleX * sign, s.y, s.z);

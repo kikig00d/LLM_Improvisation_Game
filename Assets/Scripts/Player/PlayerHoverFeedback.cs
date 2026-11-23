@@ -74,7 +74,7 @@ namespace Improv.Player
 
         public void Refresh(Vector2 worldPoint)
         {
-            var target = InteractableLookup.FindAt(worldPoint);
+            var target = click.FindVisibleTarget(worldPoint);
 
             if (target != null)
             {
