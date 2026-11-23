@@ -1,0 +1,21 @@
+<!--
+  대화 UI의 구조. 웹의 HTML과 같은 역할이다. 모양(색, 크기)은 Dialogue.uss가 정한다.
+  name은 C#에서 찾을 때 쓰는 이름(HTML의 id), class는 USS에서 모양을 입힐 때 쓰는 이름이다.
+-->
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <Style src="Dialogue.uss" />
+
+    <!-- 말풍선이 그려질 판. 화면 전체를 덮지만 마우스는 통과시킨다. -->
+    <ui:VisualElement name="bubble-layer" class="layer" picking-mode="Ignore" />
+
+    <!-- 대화창 (R-014). 처음에는 숨겨 두고 스페이스로 연다. -->
+    <ui:VisualElement name="dialogue-window" class="window">
+        <ui:ScrollView name="history" class="history" />
+        <ui:VisualElement class="sentence-row">
+            <ui:VisualElement name="chips" class="chips" />
+            <ui:TextField name="word-input" class="word-input" />
+        </ui:VisualElement>
+        <ui:VisualElement name="candidates" class="candidates" />
+        <ui:Label name="hint" class="hint" />
+    </ui:VisualElement>
+</ui:UXML>

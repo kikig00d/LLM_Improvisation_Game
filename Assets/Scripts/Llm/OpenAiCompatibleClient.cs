@@ -67,10 +67,10 @@ namespace Improv.Llm
         // #3. 보내고 받기
         // =====================================================================
 
-        public async Awaitable<LlmReply> SendAsync(IReadOnlyList<ChatMessage> messages, CancellationToken cancel)
+        public async Awaitable<LlmReply> SendAsync(IReadOnlyList<ChatMessage> messages, CancellationToken cancel, bool jsonMode = false)
         {
             string url = baseUrl + "/chat/completions";
-            string requestJson = BuildRequestJson(messages);
+            string requestJson = BuildRequestJson(messages, jsonMode);
 
             var reply = new LlmReply { Model = Model };
             var stopwatch = Stopwatch.StartNew();
@@ -121,7 +121,7 @@ namespace Improv.Llm
         // #4. 도우미 함수
         // =====================================================================
 
-        string BuildRequestJson(IReadOnlyList<ChatMessage> messages)
+        string BuildRequestJson(IReadOnlyList<ChatMessage> messages, bool jsonMode)
         {
             var body = new ChatRequest
             {
@@ -136,6 +136,9 @@ namespace Improv.Llm
             // JsonUtility는 빈 값도 항상 써 버려서, 선택 항목은 필요할 때만 끝에 끼워 넣는다.
             if (!string.IsNullOrEmpty(reasoningEffort))
                 json = json.Insert(json.Length - 1, $",\"reasoning_effort\":\"{reasoningEffort}\"");
+            // OpenAI 형식의 "JSON으로만 답하기" 옵션. 서버가 문법에 맞는 JSON만 나오게 막아 준다.
+            if (jsonMode)
+                json = json.Insert(json.Length - 1, ",\"response_format\":{\"type\":\"json_object\"}");
             return json;
         }
 

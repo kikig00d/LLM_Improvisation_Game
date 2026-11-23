@@ -1,21 +1,34 @@
 # 진행 현황
 
-> 새 세션이나 대화 압축(/compact) 뒤에 이어서 작업하기 위한 요약. 마지막 갱신: 2026-11-20
+> 새 세션이나 대화 압축(/compact) 뒤에 이어서 작업하기 위한 요약. 마지막 갱신: 2026-11-23
 > 규칙과 수치의 원본은 [GDD.md](GDD.md), 작업 규칙은 [../CLAUDE.md](../CLAUDE.md)다. 여기는 "지금 어디까지 왔나"만 적는다.
 
 ## 현재 상태
 
 - 브랜치: `main`. 작업할 때는 마일스톤마다 `feature/m<번호>-<이름>` 브랜치를 만들고, 사용자가 직접 확인한 뒤 main에 fast-forward로 합친다.
-- 씬: `Assets/Scenes/Lodge.unity` 하나. 1층 거실, 2층 개인실, 계단, 계단참과 개인실 사이의 문, 상자 3개(Box_A·B는 거실, Box_C는 개인실), 플레이어.
+- 씬: `Assets/Scenes/Lodge.unity` 하나. 1층 거실, 2층 개인실, 계단, 계단참과 개인실 사이의 문, 상자 3개(Box_A·B는 거실, Box_C는 개인실), 플레이어("손님"), NPC 한도윤(거실 x=2.5), UI(대화창·말풍선).
 - M3까지 main에 합쳐졌다 (2026-11-20 사용자 확인).
 - 사용 모델: **qwen3:8b** (Q2 결정, 2026-11-20). 비교용으로 받은 llama3.1:8b, exaone3.5:7.8b는 디스크에 남아 있다 (`ollama rm <이름>`으로 지울 수 있음).
-- 다음 할 일: **M4 (NPC 1명과 대화)**. M4 전에 사용자에게 NPC 인지 노트를 다시 받고, 비밀을 쉽게 털어놓는 문제를 프롬프트로 다룬다.
+- 진행 중: **M4 (NPC 1명과 대화)**, 브랜치 `feature/m4-npc-dialogue`. 구현과 시뮬레이션 검증 끝, 사용자의 직접 확인(특히 실제 한글 타자) 대기.
+
+## M4 진행 기록 (2026-11-23)
+
+- 결정 (GDD 1.1): 대화 상대를 고르지 않는다. 말은 소리라서 청각 범위(6유닛, [가정]) 안의 모두가 듣고, 벽·닫힌 문이 막는다 (R-014a·b). 1:1 원거리 채팅은 없다. 귓속말·외치기는 나중에 범위 배율로.
+- 결정: UI는 UI Toolkit, 글꼴은 Noto Sans KR Regular(OFL, `Assets/Fonts/NotoSansKR`, notofonts/noto-cjk에서 받음). 단어 사전은 Claude 초안 약 200개 `Assets/Data/Dialogue/Words.txt` (사용자가 고쳐 쓴다).
+- 구조: `Characters/Speech`(SpeechEvent, SpeechSystem, Speaker=입, Hearing=귀) → 플레이어와 NPC가 같이 씀(P-1). `Npc`(NpcCharacterSheet, NpcPrompt, NpcDialogueBrain). `UI`(WordDictionary, HangulMatcher, DialogueWindow, SpeechBubbleOverlay). `Player/PlayerSpeechInput`. `Llm/LlmSettings`(공유 설정 에셋 `Assets/Data/LlmSettings.asset`). 캐릭터 시트 `Assets/Data/Characters/HanDoyun.asset`.
+- 입력: 스페이스 = `Player/Talk` (Jump에서 스페이스를 뺐다). 대화창 안: 글자 → 후보, 스페이스/탭 고르기, ↑↓, 엔터 보내기(치던 글자가 있으면 먼저 고르기), Esc 닫기. 고른 단어는 고칠 수 없다(R-015a). 자동완성은 조합 중 글자("차"→창고)와 초성("ㅊㄱ")도 맞춘다.
+- 캐릭터끼리 몸이 부딪히지 않게 `Character` 레이어(8번)를 만들고 서로 충돌을 껐다. 카메라 y를 3 → 2.2로 내려 화면 아래에 대화창 자리를 만들었다.
+- 시뮬레이션 검증: 스페이스로 열림·이동 꺼짐(E-003), 자동완성, 문장 전송 → NPC 답과 말풍선, 생각 중 "..."(E-004), 닫힌 문 너머·12유닛 밖에서는 못 들음, 문 열면 들음, LLM 실패 시 "..."+오류(E-005). 비밀 질문에 "잠들었다", "모르지"로 둘러댐.
+- R-016b (사용자 지시): NPC의 반응(돌아보기, 대답할지)은 코드가 강제하지 않고 LLM이 고른다. 같은 호출에서 JSON `{"look_at": 이름 또는 "", "say": 대사 또는 ""}`로 받는다(`response_format: json_object`). 확인: 질문에는 돌아보고 답함, "고마워"에는 돌아보지 않고 "안녕."만.
+- 시뮬레이션 주의: 에디터 창에 포커스가 없으면 Input System이 키보드를 꺼서(`ResetAndDisableNonBackgroundDevices`) 흉내 낸 키 입력이 무시된다. 포커스 상관없는 검증은 `DialogueWindow`의 public 함수를 직접 부른다.
+- 확인 못 한 것: 실제 키보드로 한글을 치는 IME 조합 동작(코드로 흉내 낼 수 없음). 층 사이(천장)는 소리를 막지 않는다 — 막을지 사용자에게 물어볼 것.
+- 교훈: 파일을 쓰는 도중에 유니티가 빈 파일을 먼저 읽어 컴파일 목록에서 빠지는 일이 있었다. 재가져오기·강제 컴파일로도 안 풀려 에디터 재시작으로 해결.
 
 ## M3 진행 기록 (2026-11-20)
 
 - Ollama 0.40.16 설치(winget, 사용자 계정 설치라 관리자 권한 불필요). 실행 파일 `%LOCALAPPDATA%\Programs\Ollama\ollama.exe`. 서버는 자동 실행되어 `http://localhost:11434`.
 - 받은 모델: `llama3.1:8b`(4.9GB), `exaone3.5:7.8b`(4.8GB), `qwen3:8b`(5.2GB).
-- 코드: `Assets/Scripts/Llm/` — `ILlmClient`(갈아 끼우는 약속), `OpenAiCompatibleClient`(/v1/chat/completions), `LlmDebugLog`(요청·응답·시간을 Console과 `Logs/llm_debug.log`에), `LlmConsoleTester`(M3 확인·모델 비교용, M4에서 지움). 씬의 `LlmTester` 오브젝트에 붙어 있고 Play 시작 때 자동으로 보낸다.
+- 코드: `Assets/Scripts/Llm/` — `ILlmClient`(갈아 끼우는 약속), `OpenAiCompatibleClient`(/v1/chat/completions), `LlmDebugLog`(요청·응답·시간을 Console과 `Logs/llm_debug.log`에), `LlmConsoleTester`(M3 확인·모델 비교용, M4에서 지웠다. 다시 비교하려면 git 기록 00d50b1에서 꺼낸다).
 - qwen3는 생각하는 모델이라 `reasoning_effort: "none"`으로 생각을 끈다. 다른 모델은 이 값을 무시한다 (확인함).
 - 측정: 세 모델 모두 짧은 대사 0.2~0.3초, 첫 호출(모델 적재) 4~5초. VRAM 12GB에는 한 번에 한 모델만 올라가므로 모델을 바꾸면 다시 4~5초.
 - E-004: 1.5초가 넘으면 `(생각 중...)` 로그. E-005: 없는 모델(HTTP 404), 꺼진 서버(연결 실패) 모두 빨간 오류 + NPC "..." 확인.

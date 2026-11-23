@@ -16,10 +16,13 @@
 - P-2. 판정은 월드 데이터로 하고, 말풍선 같은 UI는 그 결과를 표시만 한다.
 - P-3. LLM은 인지 필터를 통과한 정보만 받는다.
 - P-4. LLM은 드물게, 고수준 판단에만 부르고 평소 행동은 코드로 처리한다.
+- NPC가 "반응"으로 보이는 행동(돌아보기, 대답할지 말지 등)은 코드로 강제하지 않는다. 엘더스크롤식 자동 반응 대신 LLM이 고르게 하고, 이미 하는 LLM 호출의 JSON 답에 선택지를 얹는다 (R-016b). 코드는 몸의 능력(`FaceTowards` 등)만 제공한다.
 
 ## 코드 구조와 규칙
 
-- `Assets/Scripts/World`: 방, 계단 같은 월드 데이터. `Assets/Scripts/Characters`: 플레이어와 NPC가 함께 쓰는 몸과 상태. `Assets/Scripts/Player`: 플레이어 전용 입력.
+- `Assets/Scripts/World`: 방, 계단 같은 월드 데이터. `Assets/Scripts/Characters`: 플레이어와 NPC가 함께 쓰는 몸과 상태(`Speech`: 입 `Speaker`, 귀 `Hearing`). `Assets/Scripts/Player`: 플레이어 전용 입력. `Assets/Scripts/Npc`: NPC 두뇌와 캐릭터 시트. `Assets/Scripts/Llm`: LLM 연결. `Assets/Scripts/UI`: 대화창, 말풍선.
+- 말은 대상을 고르지 않는다. `Speaker.Say()` → `SpeechSystem`이 청각 범위 안의 `Hearing`에만 전달한다. 플레이어 대화 기록과 NPC가 LLM에 넘기는 내용은 모두 귀를 통과한 말뿐이다 (P-1, P-3).
+- UI는 UI Toolkit(UXML/USS, `Assets/UI`)으로 만들고 글꼴은 Noto Sans KR을 쓴다. 튜닝 데이터(캐릭터 시트, LLM 설정)는 ScriptableObject 에셋(`Assets/Data`)에 둔다.
 - 캐릭터의 몸(`CharacterMotor`)과 조종자(`PlayerInputDriver`, 나중에 NPC AI)를 분리한다. NPC는 같은 몸을 `SetMoveInput()`으로 움직인다.
 - 이동은 "층 + x좌표" 모델이다. 걸을 때 y를 잠그고, 계단은 Kinematic으로 경로를 따라간다. 캐릭터 기준점(pivot)은 발이다.
 - `MonoBehaviour`는 파일 하나에 하나, 파일 이름은 클래스 이름과 같게.
@@ -51,6 +54,8 @@
 
 - 유니티 에디터는 Unity CLI(`unity`)와 `com.unity.pipeline` 패키지로 조종한다. 씬과 에셋은 YAML을 직접 고치지 말고, 열린 에디터에서 C#으로 바꾼다.
 - 이 PC의 Windows PowerShell 5.1은 외부 프로그램 인자 속 큰따옴표를 망가뜨린다. C# 코드는 `unity command script eval --code` 대신 파일로 써서 `--file <경로>`로 넘긴다.
+- `script eval` 코드에는 using을 쓸 수 없어서 확장 메서드는 정적 클래스 이름으로 부른다 (예: `UQueryExtensions.Q(root, "이름")`, `InputActionSetupExtensions.AddAction(map, ...)`).
+- 새 스크립트를 썼는데 컴파일된 타입에 안 보이면(eval에서 CS0234), 유니티가 저장 도중의 빈 파일을 읽은 것일 수 있다. 재가져오기로 안 되면 `unity close .` 후 `unity open .`.
 - 게임 화면 캡처: `unity command capture game_view --source camera --output-path <경로>`.
 - 검증은 Play 모드에서 완료 기준대로 확인한다. 코드로 입력을 흉내 낸 테스트와 실제 키보드 조작 확인은 구분해서 보고한다.
 - Unity 6000.3.14f1, URP 2D. 클라우드 연결은 꺼져 있다.

@@ -17,6 +17,7 @@ namespace Improv.Llm
         /// Awaitable: 유니티 6의 비동기 작업. await 하는 동안 게임은 멈추지 않고 다음 프레임을 계속 그린다.
         /// C로 치면 콜백 함수를 넘기는 대신, 결과가 올 때까지 "여기서 잠깐 나갔다 돌아온다"고 표시하는 것.
         /// </summary>
-        Awaitable<LlmReply> SendAsync(IReadOnlyList<ChatMessage> messages, CancellationToken cancel);
+        /// <param name="jsonMode">true면 답을 JSON 한 덩어리로만 받는다. NPC가 대사와 행동(돌아보기 등)을 함께 고를 때 쓴다.</param>
+        Awaitable<LlmReply> SendAsync(IReadOnlyList<ChatMessage> messages, CancellationToken cancel, bool jsonMode = false);
     }
 }

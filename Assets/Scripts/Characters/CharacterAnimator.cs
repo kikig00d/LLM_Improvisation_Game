@@ -66,13 +66,21 @@ namespace Improv.Characters
             //  - 둘 다 없으면 마지막 방향을 유지한다.
             float facingX = motor.IsClimbing ? velocity.x : motor.MoveInput.x;
             float threshold = motor.IsClimbing ? moveThreshold : 0.1f;
-            if (Mathf.Abs(facingX) > threshold)
-            {
-                bool faceRight = facingX > 0f;
-                float sign = (faceRight == artFacesRight) ? 1f : -1f;
-                var s = visualRoot.localScale;
-                visualRoot.localScale = new Vector3(baseScaleX * sign, s.y, s.z);
-            }
+            if (Mathf.Abs(facingX) > threshold) SetFacing(facingX > 0f);
+        }
+
+        /// <summary>제자리에서 한 점을 바라본다. NPC가 말소리 쪽을 돌아볼 때 쓴다. 다음에 걸으면 다시 걷는 방향을 본다.</summary>
+        public void FaceTowards(Vector2 point)
+        {
+            float dx = point.x - motor.FeetPosition.x;
+            if (Mathf.Abs(dx) > 0.05f) SetFacing(dx > 0f);
+        }
+
+        void SetFacing(bool faceRight)
+        {
+            float sign = (faceRight == artFacesRight) ? 1f : -1f;
+            var s = visualRoot.localScale;
+            visualRoot.localScale = new Vector3(baseScaleX * sign, s.y, s.z);
         }
 
         void Play(int stateHash)
