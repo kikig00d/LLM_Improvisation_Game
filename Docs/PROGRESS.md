@@ -9,7 +9,8 @@
 - 씬: `Assets/Scenes/Lodge.unity` 하나. 1층 거실, 2층 개인실, 계단, 계단참과 개인실 사이의 문, 상자 3개(Box_A·B는 거실, Box_C는 개인실), 플레이어("손님"), NPC 한도윤(거실 x=2.5), UI(대화창·말풍선).
 - M3까지 main에 합쳐졌다 (2026-11-20 사용자 확인).
 - 사용 모델: **qwen3:8b** (Q2 결정, 2026-11-20). 비교용으로 받은 llama3.1:8b, exaone3.5:7.8b는 디스크에 남아 있다 (`ollama rm <이름>`으로 지울 수 있음).
-- 진행 중: **M4 (NPC 1명과 대화)**, 브랜치 `feature/m4-npc-dialogue`. 구현과 시뮬레이션 검증 끝, 사용자의 직접 확인(특히 실제 한글 타자) 대기.
+- M4까지 main에 합쳐졌다 (2026-11-23 사용자 확인).
+- 다음 할 일: **M5 (시야)**. 열린 질문: 층 사이(천장)가 소리를 막아야 하는지 사용자 답 대기.
 
 ## M4 진행 기록 (2026-11-23)
 
@@ -42,6 +43,7 @@
 | M2 | 문 여닫기, 운반(계단 포함), 손이 닿는 거리·가로막힘·겹침 판정 | `Interactable`, `Door`, `Carryable`, `CharacterInteractor`, `PlayerClickInteraction`, `CharacterAnimator` |
 | M2+ | 하얀 빛 강조, 커서 아이콘, 놓일 자리 미리보기, 겹치면 빈자리로 밀어 놓기(R-007b) | `HoverHighlight`, `PlayerHoverFeedback`, `InteractableLookup`, `SpriteSilhouette.shader` |
 | M3 | 로컬 LLM 연결(Ollama), 화이트박스 디버그 로그, E-004·E-005 | `ILlmClient`, `OpenAiCompatibleClient`, `LlmDebugLog`, `LlmConsoleTester` |
+| M4 | 청각 기반 대화(대상 없음), 단어 사전 대화창, 말풍선, LLM이 고르는 NPC 반응 | `Speaker`, `Hearing`, `SpeechSystem`, `NpcDialogueBrain`, `DialogueWindow`, `SpeechBubbleOverlay` |
 
 ## M3 결정 사항 (2026-11-20, 사용자 승인)
 
