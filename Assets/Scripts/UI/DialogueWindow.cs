@@ -22,6 +22,10 @@ namespace Improv.UI
         [SerializeField] TextAsset wordList;          // Assets/Data/Dialogue/Words.txt
         [SerializeField] int maxCandidates = 8;
         [SerializeField] int maxHistoryLines = 60;
+        [Tooltip("대화 기록 한 줄이 남는 시간 (초). R-016c, O-008 [가정]")]
+        [SerializeField] float historyLifetime = 60f;
+        [Tooltip("사라지기 전에 흐려지는 시간 (초)")]
+        [SerializeField] float historyFadeDuration = 8f;
         [SerializeField] string defaultHint = "글자를 치면 후보가 나와요 · 스페이스/탭: 고르기 · ↑↓: 후보 바꾸기 · 엔터: 보내기 · Esc: 닫기";
 
         // =====================================================================
@@ -132,7 +136,8 @@ namespace Improv.UI
         public void AddHistory(string speakerName, string text, bool isSelf)
         {
             if (history == null) return;
-            var line = new Label($"{speakerName}: {text}");
+            // userData: 요소마다 아무 값이나 달아 둘 수 있는 칸. 들은 시각을 적어 두고 휘발 계산에 쓴다.
+            var line = new Label($"{speakerName}: {text}") { userData = Time.time };
             line.AddToClassList("history-line");
             if (isSelf) line.AddToClassList("history-line--self");
             history.Add(line);
@@ -142,6 +147,24 @@ namespace Improv.UI
 
             // 크기가 계산된 뒤에 맨 아래로 내린다.
             history.schedule.Execute(() => history.ScrollTo(line));
+        }
+
+        // R-016c: 대화는 영구히 남지 않는다. 오래된 줄은 흐려지다가 사라진다. 창이 닫혀 있어도 시간은 흐른다.
+        void Update()
+        {
+            if (history == null) return;
+            var lines = history.contentContainer;
+            for (int i = lines.childCount - 1; i >= 0; i--)
+            {
+                VisualElement line = lines[i];
+                if (line.userData is not float heardAt) continue;
+
+                float age = Time.time - heardAt;
+                if (age >= historyLifetime) { line.RemoveFromHierarchy(); continue; }
+
+                float fadeStart = historyLifetime - historyFadeDuration;
+                line.style.opacity = age <= fadeStart ? 1f : 1f - (age - fadeStart) / historyFadeDuration;
+            }
         }
 
         // =====================================================================

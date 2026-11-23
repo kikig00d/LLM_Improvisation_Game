@@ -22,8 +22,12 @@ namespace Improv.Npc
 
         [SerializeField] NpcCharacterSheet sheet;
         [SerializeField] LlmSettings llm;
-        [Tooltip("LLM에 함께 보낼 최근 대화 줄 수. 길수록 기억이 길지만 느려진다.")]
+        [Tooltip("단기 기억에 담는 최대 줄 수. 길수록 LLM이 느려진다.")]
         [SerializeField] int maxHistoryMessages = 16;
+        [Tooltip("들은 말을 잊기까지의 시간 (초). R-016d, O-008 [가정]")]
+        [SerializeField] float shortTermSeconds = 120f;
+        [Tooltip("집중해서 기억한 것(remember)을 몇 개까지 간직하는지. 넘치면 오래된 것부터 잊는다. O-008 [가정]")]
+        [SerializeField] int maxLongTermNotes = 10;
         [Tooltip("이 시간보다 답이 늦으면 머리 위에 ...를 띄운다 (E-004).")]
         [SerializeField] float thinkingIndicatorDelay = 1.0f;
 
@@ -37,7 +41,11 @@ namespace Improv.Npc
         CharacterAnimator characterAnimator;   // 없어도 된다. 있으면 LLM이 고를 때 돌아볼 수 있다
         ILlmClient client;
 
-        readonly List<ChatMessage> history = new();       // 들은 말과 내가 한 말 (system 제외)
+        // 단기 기억: 들은 말과 내가 한 말, 그리고 그때의 시각. 시간이 지나면 잊는다 (R-016d).
+        // (ChatMessage, float) 는 튜플: 이름 없는 작은 struct를 그 자리에서 만드는 문법.
+        readonly List<(ChatMessage message, float time)> shortTerm = new();
+        // 장기 기억: LLM이 집중해서 기억하기로 고른 짧은 메모 (R-016d).
+        readonly List<string> longTerm = new();
         readonly List<SpeechEvent> pending = new();       // 답을 만드는 동안 새로 들린 말. 선입선출로 다음 차례에 처리
         readonly Dictionary<string, Vector2> lastHeardFrom = new();   // 이름 → 그 목소리가 마지막으로 들린 곳
         bool busy;
@@ -47,6 +55,8 @@ namespace Improv.Npc
         static readonly Regex NamePrefix = new(@"^\s*[^\s:：]{1,10}\s*[:：]\s*");
 
         public bool IsBusy => busy;
+        public int ShortTermCount => shortTerm.Count;
+        public IReadOnlyList<string> LongTerm => longTerm;
 
         // =====================================================================
         // #3. 유니티 생명주기
@@ -92,14 +102,14 @@ namespace Improv.Npc
                 while (pending.Count > 0)
                 {
                     foreach (var heard in pending)
-                        history.Add(ChatMessage.User($"{heard.Speaker.DisplayName}: {heard.Text}"));
+                        shortTerm.Add((ChatMessage.User($"{heard.Speaker.DisplayName}: {heard.Text}"), heard.Time));
                     pending.Clear();
-                    TrimHistory();
+                    Forget();
 
                     string room = roomPresence != null && roomPresence.CurrentRoom != null
                         ? roomPresence.CurrentRoom.DisplayName : "산장 안";
-                    var messages = new List<ChatMessage> { ChatMessage.System(NpcPrompt.BuildSystem(sheet, room)) };
-                    messages.AddRange(history);
+                    var messages = new List<ChatMessage> { ChatMessage.System(NpcPrompt.BuildSystem(sheet, room, longTerm)) };
+                    foreach (var memory in shortTerm) messages.Add(memory.message);
 
                     int ticket = ++requestTicket;
                     _ = ShowThinkingAfterDelay(ticket, cancel);
@@ -119,7 +129,7 @@ namespace Improv.Npc
                     }
 
                     // 모델이 쓴 JSON을 그대로 기억에 넣는다. 다음 답도 같은 형식을 따라 하게 된다.
-                    history.Add(ChatMessage.Assistant(reply.Text));
+                    shortTerm.Add((ChatMessage.Assistant(reply.Text), Time.time));
                     ActOn(ParseDecision(reply.Text));
                 }
             }
@@ -141,10 +151,12 @@ namespace Improv.Npc
             catch (OperationCanceledException) { }
         }
 
-        void TrimHistory()
+        // R-016d: 오래된 말은 잊는다. 시간이 지났거나, 줄 수가 넘치면 오래된 것부터.
+        void Forget()
         {
-            int extra = history.Count - maxHistoryMessages;
-            if (extra > 0) history.RemoveRange(0, extra);   // 오래된 것부터 잊는다
+            shortTerm.RemoveAll(m => Time.time - m.time > shortTermSeconds);
+            int extra = shortTerm.Count - maxHistoryMessages;
+            if (extra > 0) shortTerm.RemoveRange(0, extra);
         }
 
         // =====================================================================
@@ -157,6 +169,7 @@ namespace Improv.Npc
         {
             public string look_at;   // 돌아볼 사람 이름. 빈 문자열이면 돌아보지 않는다
             public string say;       // 할 말. 빈 문자열이면 말하지 않는다
+            public string remember;  // 집중해서 기억할 짧은 메모. 빈 문자열이면 기억하지 않는다 (R-016d)
         }
 
         NpcDecision ParseDecision(string json)
@@ -180,6 +193,14 @@ namespace Improv.Npc
             {
                 if (lastHeardFrom.TryGetValue(decision.look_at.Trim(), out Vector2 from)) characterAnimator.FaceTowards(from);
                 else Debug.Log($"[NPC {speaker.DisplayName}] 모르는 사람을 보려 함: {decision.look_at}", this);
+            }
+
+            // 집중해서 기억하기 (R-016d). 고르지 않은 말은 단기 기억과 함께 시간이 지나면 사라진다.
+            if (!string.IsNullOrWhiteSpace(decision.remember))
+            {
+                longTerm.Add(decision.remember.Trim());
+                if (longTerm.Count > maxLongTermNotes) longTerm.RemoveAt(0);
+                Debug.Log($"[NPC {speaker.DisplayName}] 기억함: {decision.remember}", this);
             }
 
             // 말하기. 말하지 않기로 고른 것도 선택이다.

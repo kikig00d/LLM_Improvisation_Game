@@ -749,6 +749,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Improv.UI.SpeechBubbleOverlay
   worldCamera: {fileID: 0}
+  listener: {fileID: 1577261660}
   baseDuration: 2.5
   perCharDuration: 0.12
 --- !u!114 &161543854
@@ -766,6 +767,8 @@ MonoBehaviour:
   wordList: {fileID: 4900000, guid: a7fc4add028801e4aafd3e4f4da0f907, type: 3}
   maxCandidates: 8
   maxHistoryLines: 60
+  historyLifetime: 60
+  historyFadeDuration: 8
   defaultHint: "\uAE00\uC790\uB97C \uCE58\uBA74 \uD6C4\uBCF4\uAC00 \uB098\uC640\uC694
     \xB7 \uC2A4\uD398\uC774\uC2A4/\uD0ED: \uACE0\uB974\uAE30 \xB7 \u2191\u2193: \uD6C4\uBCF4
     \uBC14\uAFB8\uAE30 \xB7 \uC5D4\uD130: \uBCF4\uB0B4\uAE30 \xB7 Esc: \uB2EB\uAE30"
@@ -3434,6 +3437,7 @@ GameObject:
   - component: {fileID: 987363939}
   - component: {fileID: 987363941}
   - component: {fileID: 987363940}
+  - component: {fileID: 987363942}
   m_Layer: 0
   m_Name: Railing
   m_TagString: Untagged
@@ -3561,6 +3565,19 @@ SpriteRenderer:
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
   m_SpriteSortPoint: 0
+--- !u!114 &987363942
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 987363938}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4e85f46f1593ed0489e542f199f22e3f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Improv.World.SoundObstacle
+  transmission: 1
 --- !u!1 &1002280005
 GameObject:
   m_ObjectHideFlags: 0
@@ -6354,6 +6371,10 @@ MonoBehaviour:
   whisperMultiplier: 0.3
   shoutMultiplier: 2.5
   earHeight: 1.5
+  wallTransmission: 0.3
+  closedDoorTransmission: 0.5
+  ceilingTransmission: 0.6
+  floorHeight: 3
 --- !u!114 &1577261661
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -8084,6 +8105,8 @@ MonoBehaviour:
   sheet: {fileID: 11400000, guid: 0a6fef539b6fb614cb1c138097dc18e1, type: 2}
   llm: {fileID: 11400000, guid: 683d3cf386496cc4d81edf0518a81da2, type: 2}
   maxHistoryMessages: 16
+  shortTermSeconds: 120
+  maxLongTermNotes: 10
   thinkingIndicatorDelay: 1
 --- !u!114 &1931264162
 MonoBehaviour:
@@ -8101,6 +8124,10 @@ MonoBehaviour:
   whisperMultiplier: 0.3
   shoutMultiplier: 2.5
   earHeight: 1.5
+  wallTransmission: 0.3
+  closedDoorTransmission: 0.5
+  ceilingTransmission: 0.6
+  floorHeight: 3
 --- !u!114 &1931264163
 MonoBehaviour:
   m_ObjectHideFlags: 0

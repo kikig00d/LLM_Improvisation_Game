@@ -7,7 +7,8 @@ namespace Improv.UI
 {
     /// <summary>
     /// 말한 사람 머리 위에 말풍선을 띄운다 (R-016a). LLM을 기다리는 NPC 위에는 "..."를 띄운다 (E-004).
-    /// 표시만 한다. 누가 무엇을 들었는지는 Hearing이 판정한다 (P-2).
+    /// 플레이어 귀에 들린 말만 보인다. 누가 무엇을 들었는지는 Hearing이 판정하고, 여기는 표시만 한다 (P-1, P-2).
+    /// "..." 생각 중 표시는 소리가 아니라 눈에 보이는 모습이라 지금은 거리와 상관없이 보인다. 시야(M5)에서 다시 다룬다.
     /// </summary>
     [RequireComponent(typeof(UIDocument))]
     public class SpeechBubbleOverlay : MonoBehaviour
@@ -17,6 +18,8 @@ namespace Improv.UI
         // =====================================================================
 
         [SerializeField] Camera worldCamera;              // 비우면 Main Camera
+        [Tooltip("이 귀에 들린 말만 말풍선으로 보인다 (R-016a). 보통 플레이어. 비우면 모든 말을 보인다(디버그용).")]
+        [SerializeField] Hearing listener;
         [SerializeField] float baseDuration = 2.5f;       // 말풍선이 떠 있는 기본 시간 (초)
         [SerializeField] float perCharDuration = 0.12f;   // 글자 하나당 더 떠 있는 시간. 긴 말은 오래 읽게
 
@@ -51,10 +54,16 @@ namespace Improv.UI
             layer = document.rootVisualElement.Q("bubble-layer");
             if (layer == null) Debug.LogError("[SpeechBubbleOverlay] UXML에서 bubble-layer를 찾지 못했습니다.", this);
             bubbles.Clear();   // UIDocument가 화면을 새로 만들었으므로 예전 말풍선은 버린다
-            SpeechSystem.Spoken += OnSpoken;
+            // 플레이어 귀가 있으면 그 귀에 들린 말만, 없으면 모든 말을 받는다.
+            if (listener != null) listener.Heard += OnSpoken;
+            else SpeechSystem.Spoken += OnSpoken;
         }
 
-        void OnDisable() => SpeechSystem.Spoken -= OnSpoken;
+        void OnDisable()
+        {
+            if (listener != null) listener.Heard -= OnSpoken;
+            else SpeechSystem.Spoken -= OnSpoken;
+        }
 
         void OnSpoken(SpeechEvent speech)
         {
