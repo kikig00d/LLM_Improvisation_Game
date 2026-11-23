@@ -13,8 +13,8 @@ namespace Improv.Npc
         public string displayName = "이름";
         [TextArea(3, 8)] public string publicProfile = "나이, 직업, 성격";
 
-        [Header("숨긴 것")]
-        [TextArea(3, 8)] public string secret = "들키기 싫은 비밀";
+        [Header("숨긴 것 (비워도 된다. 비면 프롬프트에 넣지 않는다)")]
+        [TextArea(3, 8)] public string secret = "";
 
         [Header("말투")]
         [TextArea(3, 8)] public string speechStyle = "아주 짧고 투박한 문장.";

@@ -31,6 +31,12 @@ namespace Improv.Npc
         [Tooltip("이 시간보다 답이 늦으면 머리 위에 ...를 띄운다 (E-004).")]
         [SerializeField] float thinkingIndicatorDelay = 1.0f;
 
+        [Header("여러 NPC (계획서 T-4, Q-6 [가정])")]
+        [Tooltip("말을 듣고 LLM에 묻기 전 뜸 들이는 시간 범위 (초). NPC마다 무작위라 답이 한꺼번에 몰리지 않고, 그 사이 남이 먼저 한 말도 듣고 판단한다.")]
+        [SerializeField] Vector2 replyDelayRange = new(0.3f, 1.5f);
+        [Tooltip("플레이어가 끼지 않은 NPC끼리의 말이 이 번호에 닿으면 더 묻지 않고 듣기만 한다. LLM 호출량을 지키는 안전장치 (P-4).")]
+        [SerializeField] int maxNpcChain = 6;
+
         // =====================================================================
         // #2. 상태
         // =====================================================================
@@ -52,9 +58,16 @@ namespace Improv.Npc
         readonly Dictionary<string, Vector2> lastHeardFrom = new();   // 이름 → 그 목소리가 마지막으로 들린 곳
         bool busy;
         int requestTicket;
+        int replyChainDepth;   // 지금 만드는 답이 몇 번째 NPC끼리 말인가. 답할 때 Speaker.Say에 넘긴다
 
         // "이름: " 모양의 앞머리를 찾는 패턴. Clean()에서 쓴다.
         static readonly Regex NamePrefix = new(@"^\s*[^\s:：]{1,10}\s*[:：]\s*");
+        // 일본 가나(3040~30FF)와 한자(4E00~9FFF). qwen3이 가끔 섞어 쓴다("막ってる", "빈肚子"). 한국어 게임이라 그런 대사는 버린다.
+        static readonly Regex ForeignScript = new(@"[\u3040-\u30FF\u4E00-\u9FFF]");
+
+        // 내가 최근에 한 말. 같은 말을 그대로 되풀이하면 버린다 (T-4 시험에서 같은 문장을 세 번 말했다).
+        readonly List<string> recentLines = new();
+        const int RecentLineCount = 4;
 
         public bool IsBusy => busy;
 
@@ -121,10 +134,27 @@ namespace Improv.Npc
                 // 답을 만드는 사이 새로 들린 말이 있으면 한 번 더 돈다.
                 while (pending.Count > 0)
                 {
+                    // Q-6: 바로 묻지 않고 잠깐 뜸을 들인다. 그 사이 다른 사람이 먼저 답하면 그 말도 pending에 쌓여
+                    // 함께 LLM에 넘어가므로, "누가 이미 대답했네" 하고 스스로 판단할 수 있다 (R-016e).
+                    await Awaitable.WaitForSecondsAsync(UnityEngine.Random.Range(replyDelayRange.x, replyDelayRange.y), cancel);
+
+                    // 이번에 들은 말 중 가장 작은 번호를 기준으로 한다. 플레이어 말(0)이 섞였으면 다시 처음부터 센다.
+                    int depth = int.MaxValue;
                     foreach (var heard in pending)
+                    {
                         shortTerm.Add((ChatMessage.User($"{heard.Speaker.DisplayName}: {heard.Text}"), heard.Time));
+                        depth = Mathf.Min(depth, heard.ChainDepth);
+                    }
                     pending.Clear();
                     Forget();
+
+                    // T-4 안전장치: NPC끼리 너무 오래 이어지면 듣기만 한다(기억에는 남는다). 대답할지 고르는 건 여전히 LLM이다.
+                    if (depth >= maxNpcChain)
+                    {
+                        Debug.Log($"[NPC {speaker.DisplayName}] NPC끼리 말이 {depth}번 이어져 이번에는 듣기만 함", this);
+                        continue;
+                    }
+                    replyChainDepth = depth + 1;
 
                     string room = roomPresence != null && roomPresence.CurrentRoom != null
                         ? roomPresence.CurrentRoom.DisplayName : "산장 안";
@@ -144,7 +174,7 @@ namespace Improv.Npc
                     {
                         // E-005: 실패하면 "..."라고만 말하고 콘솔에 오류를 남긴다. 실패한 답은 기억에 넣지 않는다.
                         Debug.LogError($"[NPC {speaker.DisplayName}] LLM 응답 실패 ({reply.Status}): {reply.Error}", this);
-                        speaker.Say("...");
+                        speaker.Say("...", chainDepth: replyChainDepth);
                         continue;
                     }
 
@@ -216,7 +246,8 @@ namespace Improv.Npc
             }
 
             // 집중해서 기억하기 (R-016d). 고르지 않은 말은 단기 기억과 함께 시간이 지나면 사라진다.
-            if (!string.IsNullOrWhiteSpace(decision.remember))
+            // 이미 적어 둔 메모와 똑같으면 다시 적지 않는다. 같은 메모가 장기 기억을 채워 다른 기억을 밀어내지 않게.
+            if (!string.IsNullOrWhiteSpace(decision.remember) && !longTerm.Contains(decision.remember.Trim()))
             {
                 longTerm.Add(decision.remember.Trim());
                 if (longTerm.Count > maxLongTermNotes) longTerm.RemoveAt(0);
@@ -225,8 +256,15 @@ namespace Improv.Npc
 
             // 말하기. 말하지 않기로 고른 것도 선택이다.
             string line = Clean(decision.say ?? "");
-            if (line.Length > 0) speaker.Say(line);
-            else Debug.Log($"[NPC {speaker.DisplayName}] 대답하지 않기로 함", this);
+            if (line.Length == 0) { Debug.Log($"[NPC {speaker.DisplayName}] 대답하지 않기로 함", this); return; }
+
+            // 품질 거르개: 반응을 고르는 게 아니라 깨진 답을 버리는 것이다. 버린 답은 콘솔에 남긴다.
+            if (ForeignScript.IsMatch(line)) { Debug.LogWarning($"[NPC {speaker.DisplayName}] 한국어가 아닌 글자가 섞여 버림: {line}", this); return; }
+            if (recentLines.Contains(line)) { Debug.Log($"[NPC {speaker.DisplayName}] 방금 한 말을 되풀이해 버림: {line}", this); return; }
+
+            recentLines.Add(line);
+            if (recentLines.Count > RecentLineCount) recentLines.RemoveAt(0);
+            speaker.Say(line, chainDepth: replyChainDepth);
         }
 
         string Clean(string text)

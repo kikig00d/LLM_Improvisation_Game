@@ -22,20 +22,26 @@ namespace Improv.Characters.Speech
         public readonly Vector2 Origin;      // 말소리가 시작된 곳 (입 위치)
         public readonly SpeechVolume Volume;
         public readonly float Time;          // 말한 게임 시각 (Time.time)
+        /// <summary>
+        /// 플레이어가 끼지 않고 NPC끼리 이어진 말이 몇 번째인가 (계획서 T-4). 플레이어의 말은 0.
+        /// NPC가 들은 말에 답하면 그 말의 번호 + 1이 된다. 이 번호가 상한을 넘으면 NPC가 LLM을 부르지 않는다 (P-4).
+        /// </summary>
+        public readonly int ChainDepth;
 
-        public SpeechEvent(Speaker speaker, string text, Vector2 origin, SpeechVolume volume, float time)
+        public SpeechEvent(Speaker speaker, string text, Vector2 origin, SpeechVolume volume, float time, int chainDepth = 0)
         {
             Speaker = speaker;
             Text = text;
             Origin = origin;
             Volume = volume;
             Time = time;
+            ChainDepth = chainDepth;
         }
 
         /// <summary>
         /// 같은 사건인데 글만 다른 사본. 멀어서 뭉개져 들린 말(R-014c)을 귀마다 따로 만들 때 쓴다.
         /// 원래 사건은 그대로 두므로, 다른 귀나 말풍선에는 영향이 없다.
         /// </summary>
-        public SpeechEvent WithText(string text) => new(Speaker, text, Origin, Volume, Time);
+        public SpeechEvent WithText(string text) => new(Speaker, text, Origin, Volume, Time, ChainDepth);
     }
 }

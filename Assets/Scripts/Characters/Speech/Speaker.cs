@@ -53,11 +53,12 @@ namespace Improv.Characters.Speech
         // #4. 말하기
         // =====================================================================
 
-        public void Say(string text, SpeechVolume volume = SpeechVolume.Normal)
+        /// <param name="chainDepth">NPC끼리 이어진 말의 번호 (SpeechEvent.ChainDepth). 플레이어는 늘 0.</param>
+        public void Say(string text, SpeechVolume volume = SpeechVolume.Normal, int chainDepth = 0)
         {
             // 가드 절: 빈 말은 퍼뜨리지 않는다.
             if (string.IsNullOrWhiteSpace(text)) return;
-            SpeechSystem.Broadcast(new SpeechEvent(this, text.Trim(), MouthPosition, volume, Time.time));
+            SpeechSystem.Broadcast(new SpeechEvent(this, text.Trim(), MouthPosition, volume, Time.time, chainDepth));
         }
     }
 }
