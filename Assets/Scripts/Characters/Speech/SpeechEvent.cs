@@ -31,5 +31,11 @@ namespace Improv.Characters.Speech
             Volume = volume;
             Time = time;
         }
+
+        /// <summary>
+        /// 같은 사건인데 글만 다른 사본. 멀어서 뭉개져 들린 말(R-014c)을 귀마다 따로 만들 때 쓴다.
+        /// 원래 사건은 그대로 두므로, 다른 귀나 말풍선에는 영향이 없다.
+        /// </summary>
+        public SpeechEvent WithText(string text) => new(Speaker, text, Origin, Volume, Time);
     }
 }

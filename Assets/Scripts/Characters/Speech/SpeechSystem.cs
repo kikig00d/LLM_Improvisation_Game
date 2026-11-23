@@ -23,8 +23,9 @@ namespace Improv.Characters.Speech
             // 목록을 도는 중에 누가 사라지거나 생겨도 안전하도록 복사본을 돈다.
             foreach (var hearing in Hearing.All.ToArray())
             {
-                if (hearing != null && hearing.isActiveAndEnabled && hearing.CanHear(speech))
-                    hearing.Receive(speech);
+                // 들리는지, 멀어서 뭉개지는지(R-014c)는 귀가 스스로 판단한다.
+                if (hearing != null && hearing.isActiveAndEnabled)
+                    hearing.TryReceive(speech);
             }
         }
     }
