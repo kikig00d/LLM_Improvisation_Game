@@ -43,7 +43,21 @@ namespace Improv.Npc.Generation
                 if (options != null && options.Seed != null) options.Seed += 1000;   // 같은 씨드면 같은 답이 나오므로 바꾼다
             }
 
-            if (reply.Ok && TryParse(reply.Text, a, b, out var truth, out var va, out var vb))
+            // 생각(low)이 토큰을 다 써서 답이 잘리면 읽을 수 없다(I-12 시험: 생각 2800토큰, 모델 문맥은 4096).
+            // 그때는 생각을 끄고 한 번 더 쓴다. 생각을 끄면 빠르지만 주어가 덜 정확하다.
+            List<PastEvent> truth = null;
+            PastVersion va = null, vb = null;   // C처럼 미리 선언. && 뒤가 안 돌면 out이 채워지지 않아서
+            bool parsed = reply.Ok && TryParse(reply.Text, a, b, out truth, out va, out vb);
+            if (!parsed && reply.Status != LlmStatus.Cancelled && options != null && options.ReasoningEffort != "none")
+            {
+                Debug.LogWarning($"[캐스트] {a.name}·{b.name}의 과거를 읽지 못해 생각을 끄고 다시 씁니다 ({reply.Status}).");
+                var quick = new LlmRequestOptions { ReasoningEffort = "none", MaxTokens = options.MaxTokens, Seed = options.Seed, TimeoutSeconds = options.TimeoutSeconds };
+                reply = await client.SendAsync(messages, cancel, jsonMode: true, quick);
+                if (reply.Status == LlmStatus.Cancelled) throw new OperationCanceledException();
+                parsed = reply.Ok && TryParse(reply.Text, a, b, out truth, out va, out vb);
+            }
+
+            if (parsed)
             {
                 past.truth = truth;
                 past.versionA = va;
@@ -63,7 +77,7 @@ namespace Improv.Npc.Generation
             return past;
         }
 
-        const string Example = "{\"truth\": [{\"when\": \"8년 전\", \"where\": \"시장 골목 가게\", \"who\": \"김철수\", \"what\": \"이영희에게 가게 보증금을 빌림\", \"how\": \"\", \"why\": \"가게가 망해 가서\"}, {\"when\": \"그 뒤\", \"where\": \"\", \"who\": \"김철수\", \"what\": \"돈을 갚지 않고 이사함\", \"how\": \"연락을 끊고\", \"why\": \"갚을 돈이 없어서\"}, {\"when\": \"그 뒤\", \"where\": \"시장 골목\", \"who\": \"이영희\", \"what\": \"가게를 잃음\", \"how\": \"\", \"why\": \"보증금을 못 받아서\"}], \"versions\": [{\"name\": \"김철수\", \"people\": [], \"events\": [{\"when\": \"8년 전\", \"where\": \"시장 골목 가게\", \"who\": \"나\", \"what\": \"이영희에게 돈을 조금 빌림\", \"how\": \"\", \"why\": \"잠깐 급해서\"}, {\"when\": \"그 뒤\", \"where\": \"\", \"who\": \"나\", \"what\": \"일자리를 찾아 멀리 떠남\", \"how\": \"\", \"why\": \"갚을 돈을 벌려고\"}], \"feeling\": \"미안하지만 마주치기 싫음\"}, {\"name\": \"이영희\", \"people\": [\"민지 = 내 딸, 그때 5살\"], \"events\": [{\"when\": \"8년 전\", \"where\": \"시장 골목 가게\", \"who\": \"김철수\", \"what\": \"내 보증금을 빌려 감\", \"how\": \"울면서 부탁해서\", \"why\": \"\"}, {\"when\": \"그 뒤\", \"where\": \"\", \"who\": \"김철수\", \"what\": \"돈을 들고 도망감\", \"how\": \"\", \"why\": \"처음부터 갚을 생각이 없었음(내 생각)\"}, {\"when\": \"그 뒤\", \"where\": \"시장 골목\", \"who\": \"나\", \"what\": \"가게를 잃고 민지와 단칸방으로 옮김\", \"how\": \"\", \"why\": \"\"}], \"feeling\": \"용서 못 함\"}]}";
+        const string Example = "{\"truth\": [{\"when\": \"8년 전\", \"where\": \"시장 골목 가게\", \"who\": \"김철수\", \"what\": \"이영희에게 가게 보증금을 빌림\", \"how\": \"\", \"why\": \"가게가 망해 가서\"}, {\"when\": \"그 뒤\", \"where\": \"\", \"who\": \"김철수\", \"what\": \"돈을 갚지 않고 이사함\", \"how\": \"연락을 끊고\", \"why\": \"갚을 돈이 없어서\"}, {\"when\": \"그 뒤\", \"where\": \"시장 골목\", \"who\": \"이영희\", \"what\": \"가게를 잃음\", \"how\": \"\", \"why\": \"보증금을 못 받아서\"}], \"versions\": [{\"name\": \"김철수\", \"people\": [], \"events\": [{\"when\": \"8년 전\", \"where\": \"시장 골목 가게\", \"who\": \"나\", \"what\": \"이영희에게 돈을 조금 빌림\", \"how\": \"\", \"why\": \"잠깐 급해서\"}, {\"when\": \"그 뒤\", \"where\": \"\", \"who\": \"나\", \"what\": \"일자리를 찾아 멀리 떠남\", \"how\": \"\", \"why\": \"갚을 돈을 벌려고\"}], \"feeling\": \"미안하지만 마주치기 싫음\", \"affinity\": 35}, {\"name\": \"이영희\", \"people\": [\"민지 = 내 딸, 그때 5살\"], \"events\": [{\"when\": \"8년 전\", \"where\": \"시장 골목 가게\", \"who\": \"김철수\", \"what\": \"내 보증금을 빌려 감\", \"how\": \"울면서 부탁해서\", \"why\": \"\"}, {\"when\": \"그 뒤\", \"where\": \"\", \"who\": \"김철수\", \"what\": \"돈을 들고 도망감\", \"how\": \"\", \"why\": \"처음부터 갚을 생각이 없었음(내 생각)\"}, {\"when\": \"그 뒤\", \"where\": \"시장 골목\", \"who\": \"나\", \"what\": \"가게를 잃고 민지와 단칸방으로 옮김\", \"how\": \"\", \"why\": \"\"}], \"feeling\": \"용서 못 함\", \"affinity\": 8}]}";
 
         static string BuildSystem()
         {
@@ -86,6 +100,8 @@ namespace Improv.Npc.Generation
             sb.AppendLine("   - 판본의 who에서 자기는 '나', 상대는 이름으로 쓴다. 가해한 쪽은 자기가 한 일을 기억한다(변명하거나 축소할 수는 있다). 당한 쪽은 당한 일을 기억한다.");
             sb.AppendLine("   - people: 두 사람 말고 나오는 사람만 '이름 = 관계' 꼴로 적는다(예: '민수 = 내 동생, 그때 15살'). 없으면 빈 목록.");
             sb.AppendLine("   - feeling: 지금 상대에게 품은 마음, 짧은 구절.");
+            // I-12: 게임 전부터 품은 '묵은 감정'의 기반값. 숫자는 LLM이 그 사람으로서 정한다.
+            sb.AppendLine("   - affinity: 그 마음을 0~100 숫자로. 50이 보통, 0은 증오, 100은 깊은 애정. 짙은 과거면 한쪽 끝으로 치우친다.");
             // 생각을 켠 시험에서 한자가 섞였다("赔상", "面前").
             sb.AppendLine("모든 글은 한글로만 쓴다. 한자, 중국어, 일본어를 섞지 않는다. 이름은 주어진 그대로 쓴다. 산장에 오기 전의 일이다.");
             // 8b 모델은 규칙 설명보다 채워진 보기 하나를 더 잘 따른다. 산장과 상관없는 일로 보여 줘서 그대로 베끼지 않게 한다.
@@ -93,8 +109,8 @@ namespace Improv.Npc.Generation
             sb.AppendLine(Example);
             sb.AppendLine("반드시 아래 JSON 한 개로만 답한다:");
             const string ev = "{\"when\": \"\", \"where\": \"\", \"who\": \"\", \"what\": \"\", \"how\": \"\", \"why\": \"\"}";
-            sb.AppendLine("{\"truth\": [" + ev + ", ...], \"versions\": [{\"name\": \"첫째 사람 이름\", \"people\": [], \"events\": [" + ev + ", ...], \"feeling\": \"\"}, " +
-                          "{\"name\": \"둘째 사람 이름\", \"people\": [], \"events\": [...], \"feeling\": \"\"}]}");
+            sb.AppendLine("{\"truth\": [" + ev + ", ...], \"versions\": [{\"name\": \"첫째 사람 이름\", \"people\": [], \"events\": [" + ev + ", ...], \"feeling\": \"\", \"affinity\": 50}, " +
+                          "{\"name\": \"둘째 사람 이름\", \"people\": [], \"events\": [...], \"feeling\": \"\", \"affinity\": 50}]}");
             return sb.ToString();
         }
 
