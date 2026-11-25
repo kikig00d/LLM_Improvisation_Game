@@ -13,7 +13,20 @@ namespace Improv.UI
         readonly List<string> words = new();
         readonly HashSet<string> lookup = new();   // 있는지 빨리 확인하는 용도. C의 해시 테이블
 
-        public int Count => words.Count;
+        // 사람 이름 (F-17). 파일에 적지 않고 게임 중에 지금 있는 캐릭터들의 이름으로 채운다.
+        // 이름은 바뀔 수 있어서(개명) 고정 단어로 두지 않는다. 동명이인은 한 단어로 합쳐진다.
+        readonly List<string> names = new();
+
+        public int Count => words.Count + names.Count;
+        public IReadOnlyList<string> Names => names;
+
+        /// <summary>이름 단어를 통째로 바꾼다. 대화창이 캐릭터 명단이 바뀔 때마다 부른다.</summary>
+        public void SetNames(IEnumerable<string> newNames)
+        {
+            names.Clear();
+            foreach (string n in newNames)
+                if (!string.IsNullOrWhiteSpace(n) && !names.Contains(n) && !lookup.Contains(n)) names.Add(n);
+        }
 
         public static WordDictionary Parse(string text)
         {
@@ -27,7 +40,7 @@ namespace Improv.UI
             return dictionary;
         }
 
-        public bool Contains(string word) => lookup.Contains(word);
+        public bool Contains(string word) => lookup.Contains(word) || names.Contains(word);
 
         /// <summary>입력한 글자로 시작하는 단어를 최대 max개 찾는다. 똑같은 단어가 있으면 맨 앞에 둔다.</summary>
         public List<string> FindCandidates(string typed, int max)
@@ -35,7 +48,13 @@ namespace Improv.UI
             var result = new List<string>();
             if (string.IsNullOrEmpty(typed)) return result;
 
-            if (lookup.Contains(typed)) result.Add(typed);
+            if (Contains(typed)) result.Add(typed);
+            // 이름을 먼저 본다. 이름은 몇 개 안 되고, 부르려고 칠 때가 많다.
+            foreach (string word in names)
+            {
+                if (result.Count >= max) break;
+                if (word != typed && HangulMatcher.Matches(word, typed)) result.Add(word);
+            }
             foreach (string word in words)
             {
                 if (result.Count >= max) break;

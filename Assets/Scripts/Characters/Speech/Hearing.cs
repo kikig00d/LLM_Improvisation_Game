@@ -177,7 +177,7 @@ namespace Improv.Characters.Speech
             SpeechEvent heard = Perceive(speech);
             if (heard == null) return;
             if (heard != speech)
-                Debug.Log($"[노이즈] {name}에게는 이렇게 들림: {heard.Speaker.DisplayName}: {heard.Text}", this);
+                Debug.Log($"[노이즈] {name}에게는 이렇게 들림: {heard.SpeakerName}: {heard.Text}", this);
             Heard?.Invoke(heard);
         }
     }

@@ -84,7 +84,7 @@ namespace Improv.Player
         void OnHeard(SpeechEvent speech)
         {
             bool isSelf = speech.Speaker == speaker;
-            window.AddHistory(isSelf ? selfLabel : speech.Speaker.DisplayName, speech.Text, isSelf);
+            window.AddHistory(isSelf ? selfLabel : speech.SpeakerName, speech.Text, isSelf);
         }
 
         void PauseControls() => SetControls(false);

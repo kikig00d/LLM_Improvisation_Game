@@ -18,6 +18,11 @@ namespace Improv.Characters.Speech
     public class SpeechEvent
     {
         public readonly Speaker Speaker;
+        /// <summary>
+        /// 말한 순간 말한 사람의 이름 (F-17). 이름은 바뀔 수 있어서(개명), 나중에 Speaker에서 다시 읽지 않고 그때 이름을 담아 둔다.
+        /// 듣는 쪽은 이 이름만 안다. 같은 이름의 다른 사람(동명이인)이면 듣는 쪽도 구분하지 못한다 (P-3).
+        /// </summary>
+        public readonly string SpeakerName;
         public readonly string Text;
         public readonly Vector2 Origin;      // 말소리가 시작된 곳 (입 위치)
         public readonly SpeechVolume Volume;
@@ -31,6 +36,7 @@ namespace Improv.Characters.Speech
         public SpeechEvent(Speaker speaker, string text, Vector2 origin, SpeechVolume volume, float time, int chainDepth = 0)
         {
             Speaker = speaker;
+            SpeakerName = speaker != null ? speaker.DisplayName : "";
             Text = text;
             Origin = origin;
             Volume = volume;

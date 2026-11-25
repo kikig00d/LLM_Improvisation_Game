@@ -9,10 +9,11 @@ namespace Improv.Npc
     /// </summary>
     public static class NpcPrompt
     {
-        public static string BuildSystem(NpcCharacterSheet sheet, string roomName, IReadOnlyList<string> visibleNames, IReadOnlyList<string> longTermNotes)
+        public static string BuildSystem(NpcCharacterSheet sheet, string myName, string roomName, IReadOnlyList<string> visibleNames, IReadOnlyList<string> longTermNotes)
         {
             var sb = new StringBuilder();
-            sb.AppendLine($"너는 {sheet.displayName}이다. {sheet.publicProfile}");
+            // 이름은 시트가 아니라 지금 이름을 쓴다. 개명하면 바뀐다 (F-17). 시트의 이름은 처음 이름일 뿐이다.
+            sb.AppendLine($"너는 {myName}이다. {sheet.publicProfile}");
             sb.AppendLine($"지금 상황: 눈보라로 고립된 겨울 산장. 너는 지금 '{roomName}'에 있다.");
             // R-011, P-3: 내 눈에 보이는 사람만 알려 준다. 등 뒤나 벽 너머 사람은 목소리로만 안다.
             sb.AppendLine(visibleNames.Count > 0

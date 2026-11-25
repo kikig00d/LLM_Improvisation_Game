@@ -17,7 +17,7 @@ namespace Improv.Characters.Speech
 
         public static void Broadcast(SpeechEvent speech)
         {
-            Debug.Log($"[말소리] {speech.Speaker.DisplayName}: {speech.Text}", speech.Speaker);
+            Debug.Log($"[말소리] {speech.SpeakerName}: {speech.Text}", speech.Speaker);
             Spoken?.Invoke(speech);
 
             // 목록을 도는 중에 누가 사라지거나 생겨도 안전하도록 복사본을 돈다.

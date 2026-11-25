@@ -26,6 +26,8 @@ namespace Improv.UI
         [SerializeField] float historyLifetime = 60f;
         [Tooltip("사라지기 전에 흐려지는 시간 (초)")]
         [SerializeField] float historyFadeDuration = 8f;
+        [Tooltip("F-17 원인 찾기용: 입력칸 글자와 한글 조합이 바뀔 때마다 콘솔에 남긴다. 원인을 찾으면 끈다.")]
+        [SerializeField] bool logTyping = true;
         [SerializeField] string defaultHint = "글자를 치면 후보가 나와요 · 스페이스/탭: 고르기 · ↑↓: 후보 바꾸기 · 엔터: 보내기 · Esc: 닫기";
 
         // =====================================================================
@@ -69,6 +71,16 @@ namespace Improv.UI
             dictionary = WordDictionary.Parse(wordList.text);
         }
 
+        // 사람 이름은 사전 파일이 아니라 지금 씬의 캐릭터 이름으로 채운다 (F-17). 개명하거나 사람이 늘면 다시 채운다.
+        void RefreshNames()
+        {
+            if (dictionary == null) return;
+            var current = new List<string>();
+            foreach (var c in Improv.Characters.CharacterIdentity.All) current.Add(c.DisplayName);
+            dictionary.SetNames(current);
+            if (IsOpen) RefreshCandidates();
+        }
+
         // UIDocument는 OnEnable 때 화면을 새로 만들기 때문에, 요소 찾기와 연결도 OnEnable에서 한다.
         void OnEnable()
         {
@@ -91,9 +103,15 @@ namespace Improv.UI
             input.RegisterCallback<KeyDownEvent>(OnKeyDown, TrickleDown.TrickleDown);
             input.RegisterCallback<NavigationMoveEvent>(e => e.StopPropagation(), TrickleDown.TrickleDown);
             input.RegisterCallback<NavigationSubmitEvent>(e => e.StopPropagation(), TrickleDown.TrickleDown);
-            input.RegisterValueChangedCallback(_ => RefreshCandidates());
+            input.RegisterValueChangedCallback(e =>
+            {
+                if (logTyping) Debug.Log($"[대화창 입력] 값 '{e.previousValue}' → '{e.newValue}', 조합 중 '{composition}', 커서 {input.cursorIndex}, 포커스 {input.panel?.focusController?.focusedElement == input}", this);
+                RefreshCandidates();
+            });
 
             if (Keyboard.current != null) Keyboard.current.onIMECompositionChange += OnImeComposition;
+            Improv.Characters.CharacterIdentity.RosterChanged += RefreshNames;
+            RefreshNames();
 
             SetVisible(IsOpen);
             RefreshAll();
@@ -102,6 +120,7 @@ namespace Improv.UI
         void OnDisable()
         {
             if (Keyboard.current != null) Keyboard.current.onIMECompositionChange -= OnImeComposition;
+            Improv.Characters.CharacterIdentity.RosterChanged -= RefreshNames;
         }
 
         // =====================================================================
@@ -210,6 +229,7 @@ namespace Improv.UI
 
         void OnImeComposition(IMECompositionString text)
         {
+            if (logTyping) Debug.Log($"[대화창 입력] 조합 '{composition}' → '{text}', 값 '{input?.value}'", this);
             composition = text.ToString();
             RefreshCandidates();
         }

@@ -1676,6 +1676,7 @@ MonoBehaviour:
   maxHistoryLines: 60
   historyLifetime: 60
   historyFadeDuration: 8
+  logTyping: 1
   defaultHint: "\uAE00\uC790\uB97C \uCE58\uBA74 \uD6C4\uBCF4\uAC00 \uB098\uC640\uC694
     \xB7 \uC2A4\uD398\uC774\uC2A4/\uD0ED: \uACE0\uB974\uAE30 \xB7 \u2191\u2193: \uD6C4\uBCF4
     \uBC14\uAFB8\uAE30 \xB7 \uC5D4\uD130: \uBCF4\uB0B4\uAE30 \xB7 Esc: \uB2EB\uAE30"
@@ -2536,6 +2537,7 @@ GameObject:
   - component: {fileID: 285436536}
   - component: {fileID: 285436535}
   - component: {fileID: 285436547}
+  - component: {fileID: 285436548}
   m_Layer: 8
   m_Name: Npc_SeoMira
   m_TagString: Untagged
@@ -2801,6 +2803,20 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Improv.Characters.CharacterSleep
   visualRoot: {fileID: 0}
+--- !u!114 &285436548
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 285436534}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7486aa2162ed7d3418d819127a17a31e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Improv.Characters.CharacterIdentity
+  id: 2
+  displayName: "\uC11C\uBBF8\uB77C"
 --- !u!1 &296775391
 GameObject:
   m_ObjectHideFlags: 0
@@ -11325,6 +11341,7 @@ GameObject:
   - component: {fileID: 1235027953}
   - component: {fileID: 1235027952}
   - component: {fileID: 1235027964}
+  - component: {fileID: 1235027965}
   m_Layer: 8
   m_Name: Npc_ParkGunwoo
   m_TagString: Untagged
@@ -11590,6 +11607,20 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Improv.Characters.CharacterSleep
   visualRoot: {fileID: 0}
+--- !u!114 &1235027965
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1235027951}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7486aa2162ed7d3418d819127a17a31e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Improv.Characters.CharacterIdentity
+  id: 3
+  displayName: "\uBC15\uAC74\uC6B0"
 --- !u!1 &1246059759
 GameObject:
   m_ObjectHideFlags: 0
@@ -14225,6 +14256,7 @@ GameObject:
   - component: {fileID: 1577261667}
   - component: {fileID: 1577261666}
   - component: {fileID: 1577261665}
+  - component: {fileID: 1577261668}
   m_Layer: 8
   m_Name: Player
   m_TagString: Untagged
@@ -14584,6 +14616,20 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Improv.Characters.CharacterSleep
   visualRoot: {fileID: 0}
+--- !u!114 &1577261668
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1577261648}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7486aa2162ed7d3418d819127a17a31e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Improv.Characters.CharacterIdentity
+  id: 0
+  displayName: "\uC190\uB2D8"
 --- !u!1 &1578874500
 GameObject:
   m_ObjectHideFlags: 0
@@ -18298,6 +18344,7 @@ GameObject:
   - component: {fileID: 1931264172}
   - component: {fileID: 1931264171}
   - component: {fileID: 1931264173}
+  - component: {fileID: 1931264174}
   m_Layer: 8
   m_Name: Npc_HanDoyun
   m_TagString: Untagged
@@ -18563,6 +18610,20 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Improv.Characters.CharacterSleep
   visualRoot: {fileID: 0}
+--- !u!114 &1931264174
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1931264160}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7486aa2162ed7d3418d819127a17a31e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Improv.Characters.CharacterIdentity
+  id: 1
+  displayName: "\uD55C\uB3C4\uC724"
 --- !u!1 &1934946514
 GameObject:
   m_ObjectHideFlags: 0

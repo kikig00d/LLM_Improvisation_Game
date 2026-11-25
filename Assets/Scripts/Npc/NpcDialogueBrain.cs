@@ -56,7 +56,9 @@ namespace Improv.Npc
         // 장기 기억: LLM이 집중해서 기억하기로 고른 짧은 메모 (R-016d).
         readonly List<string> longTerm = new();
         readonly List<SpeechEvent> pending = new();       // 답을 만드는 동안 새로 들린 말. 선입선출로 다음 차례에 처리
-        readonly Dictionary<string, Vector2> lastHeardFrom = new();   // 이름 → 그 목소리가 마지막으로 들린 곳
+        // 이름 → 그 목소리가 마지막으로 들린 곳. id가 아니라 이름으로 기억하는 것은 일부러다:
+        // NPC는 들은 이름만 안다(P-3). 동명이인이면 마지막에 들린 쪽으로 돌아보며 헷갈린다 (F-17).
+        readonly Dictionary<string, Vector2> lastHeardFrom = new();
         bool busy;
         int requestTicket;
         int replyChainDepth;   // 지금 만드는 답이 몇 번째 NPC끼리 말인가. 답할 때 Speaker.Say에 넘긴다
@@ -106,7 +108,7 @@ namespace Improv.Npc
             if (sheet == null) { Debug.LogError($"[NpcDialogueBrain] '{name}'의 캐릭터 시트가 비어 있습니다.", this); enabled = false; return; }
             if (llm == null) { Debug.LogError($"[NpcDialogueBrain] '{name}'의 LLM 설정이 비어 있습니다.", this); enabled = false; return; }
 
-            speaker.SetDisplayName(sheet.displayName);
+            speaker.SetDisplayName(sheet.displayName);   // 시트의 이름은 "처음 이름". 그 뒤로는 신원(CharacterIdentity)이 이름의 주인이다
             client = llm.CreateClient();
         }
 
@@ -122,7 +124,7 @@ namespace Improv.Npc
             if (speech.Speaker == speaker) return;   // 내 목소리도 내 귀에 들리지만 대답할 대상은 아니다
 
             // 돌아볼지는 여기서 정하지 않는다. 어디서 들렸는지만 기억해 두고, LLM이 고르면 그쪽을 본다 (R-016b).
-            lastHeardFrom[speech.Speaker.DisplayName] = speech.Origin;
+            lastHeardFrom[speech.SpeakerName] = speech.Origin;
             pending.Add(speech);
             if (!busy) _ = ReplyLoopAsync(destroyCancellationToken);
         }
@@ -143,7 +145,7 @@ namespace Improv.Npc
                     int depth = int.MaxValue;
                     foreach (var heard in pending)
                     {
-                        shortTerm.Add((ChatMessage.User($"{heard.Speaker.DisplayName}: {heard.Text}"), heard.Time));
+                        shortTerm.Add((ChatMessage.User($"{heard.SpeakerName}: {heard.Text}"), heard.Time));
                         depth = Mathf.Min(depth, heard.ChainDepth);
                     }
                     pending.Clear();
@@ -159,7 +161,7 @@ namespace Improv.Npc
 
                     string room = roomPresence != null && roomPresence.CurrentRoom != null
                         ? roomPresence.CurrentRoom.DisplayName : "산장 안";
-                    var messages = new List<ChatMessage> { ChatMessage.System(NpcPrompt.BuildSystem(sheet, room, VisibleNames(), longTerm)) };
+                    var messages = new List<ChatMessage> { ChatMessage.System(NpcPrompt.BuildSystem(sheet, speaker.DisplayName, room, VisibleNames(), longTerm)) };
                     foreach (var memory in shortTerm) messages.Add(memory.message);
 
                     int ticket = ++requestTicket;
@@ -277,7 +279,7 @@ namespace Improv.Npc
             string line = text.Trim();
             // 모델이 규칙을 어기고 "한도윤: ..."처럼 자기 이름표를 붙이면 떼어 낸다. 남의 이름이면 건드리지 않는다.
             Match prefix = NamePrefix.Match(line);
-            if (prefix.Success && prefix.Value.Contains(sheet.displayName)) line = line.Substring(prefix.Length);
+            if (prefix.Success && prefix.Value.Contains(speaker.DisplayName)) line = line.Substring(prefix.Length);
             return line.Trim('"', '“', '”', '\'', ' ');
         }
     }
