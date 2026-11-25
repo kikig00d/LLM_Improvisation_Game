@@ -2555,7 +2555,9 @@ GameObject:
   - component: {fileID: 285436548}
   - component: {fileID: 285436549}
   - component: {fileID: 285436550}
-  m_Layer: 8
+  - component: {fileID: 285436552}
+  - component: {fileID: 285436551}
+  m_Layer: 9
   m_Name: Npc_SeoMira
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2614,6 +2616,7 @@ MonoBehaviour:
   thinkingIndicatorDelay: 1
   replyDelayRange: {x: 0.3, y: 1.5}
   maxNpcChain: 6
+  idleThinkSeconds: 50
 --- !u!114 &285436538
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2880,6 +2883,37 @@ MonoBehaviour:
   startStamina: 100
   startTemperature: 100
   startStress: 0
+--- !u!114 &285436551
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 285436534}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7cd7b1fe789e1824abf061e419caa16a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Improv.Npc.NpcActions
+  lookInterval: 0.3
+  personStopDistance: 1.2
+  itemStopDistance: 0.7
+--- !u!114 &285436552
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 285436534}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 06a60577d77ee174f9c7d4cb2b7572fc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Improv.Npc.NpcNavigator
+  stairsEntryTolerance: 0.3
+  blockedAfter: 0.4
+  giveUpAfter: 3
+  doorProbeDistance: 1
 --- !u!1 &296775391
 GameObject:
   m_ObjectHideFlags: 0
@@ -4843,7 +4877,7 @@ BoxCollider2D:
   m_CallbackLayers:
     serializedVersion: 2
     m_Bits: 4294967295
-  m_IsTrigger: 0
+  m_IsTrigger: 1
   m_UsedByEffector: 0
   m_CompositeOperation: 0
   m_CompositeOrder: 0
@@ -10993,7 +11027,7 @@ BoxCollider2D:
   m_CallbackLayers:
     serializedVersion: 2
     m_Bits: 4294967295
-  m_IsTrigger: 0
+  m_IsTrigger: 1
   m_UsedByEffector: 0
   m_CompositeOperation: 0
   m_CompositeOrder: 0
@@ -11876,7 +11910,9 @@ GameObject:
   - component: {fileID: 1235027965}
   - component: {fileID: 1235027966}
   - component: {fileID: 1235027967}
-  m_Layer: 8
+  - component: {fileID: 1235027969}
+  - component: {fileID: 1235027968}
+  m_Layer: 9
   m_Name: Npc_ParkGunwoo
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -11935,6 +11971,7 @@ MonoBehaviour:
   thinkingIndicatorDelay: 1
   replyDelayRange: {x: 0.3, y: 1.5}
   maxNpcChain: 6
+  idleThinkSeconds: 50
 --- !u!114 &1235027955
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -12120,7 +12157,7 @@ Transform:
   m_GameObject: {fileID: 1235027951}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -4.2, y: 0, z: 0}
+  m_LocalPosition: {x: -1, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -12201,6 +12238,37 @@ MonoBehaviour:
   startStamina: 100
   startTemperature: 100
   startStress: 0
+--- !u!114 &1235027968
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1235027951}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7cd7b1fe789e1824abf061e419caa16a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Improv.Npc.NpcActions
+  lookInterval: 0.3
+  personStopDistance: 1.2
+  itemStopDistance: 0.7
+--- !u!114 &1235027969
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1235027951}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 06a60577d77ee174f9c7d4cb2b7572fc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Improv.Npc.NpcNavigator
+  stairsEntryTolerance: 0.3
+  blockedAfter: 0.4
+  giveUpAfter: 3
+  doorProbeDistance: 1
 --- !u!1 &1246059759
 GameObject:
   m_ObjectHideFlags: 0
@@ -14840,7 +14908,7 @@ GameObject:
   - component: {fileID: 1577261669}
   - component: {fileID: 1577261671}
   - component: {fileID: 1577261670}
-  m_Layer: 8
+  m_Layer: 9
   m_Name: Player
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -16254,7 +16322,7 @@ BoxCollider2D:
   m_CallbackLayers:
     serializedVersion: 2
     m_Bits: 4294967295
-  m_IsTrigger: 0
+  m_IsTrigger: 1
   m_UsedByEffector: 0
   m_CompositeOperation: 0
   m_CompositeOrder: 0
@@ -19122,7 +19190,9 @@ GameObject:
   - component: {fileID: 1931264174}
   - component: {fileID: 1931264175}
   - component: {fileID: 1931264176}
-  m_Layer: 8
+  - component: {fileID: 1931264178}
+  - component: {fileID: 1931264177}
+  m_Layer: 9
   m_Name: Npc_HanDoyun
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -19149,6 +19219,7 @@ MonoBehaviour:
   thinkingIndicatorDelay: 1
   replyDelayRange: {x: 0.3, y: 1.5}
   maxNpcChain: 6
+  idleThinkSeconds: 50
 --- !u!114 &1931264162
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -19447,6 +19518,37 @@ MonoBehaviour:
   startStamina: 100
   startTemperature: 100
   startStress: 0
+--- !u!114 &1931264177
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1931264160}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7cd7b1fe789e1824abf061e419caa16a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Improv.Npc.NpcActions
+  lookInterval: 0.3
+  personStopDistance: 1.2
+  itemStopDistance: 0.7
+--- !u!114 &1931264178
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1931264160}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 06a60577d77ee174f9c7d4cb2b7572fc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Improv.Npc.NpcNavigator
+  stairsEntryTolerance: 0.3
+  blockedAfter: 0.4
+  giveUpAfter: 3
+  doorProbeDistance: 1
 --- !u!1 &1934946514
 GameObject:
   m_ObjectHideFlags: 0

@@ -38,6 +38,10 @@ namespace Improv.Npc
         [Tooltip("플레이어가 끼지 않은 NPC끼리의 말이 이 번호에 닿으면 더 묻지 않고 듣기만 한다. LLM 호출량을 지키는 안전장치 (P-4).")]
         [SerializeField] int maxNpcChain = 6;
 
+        [Header("혼자 생각하기 (계획서 T-6, P-4 [가정])")]
+        [Tooltip("아무 말도 안 들리고 할 일도 없으면 이 시간(게임 초)마다 한 번 혼자 무엇을 할지 생각한다. 50 = 게임 1시간")]
+        [SerializeField] float idleThinkSeconds = 50f;
+
         // =====================================================================
         // #2. 상태
         // =====================================================================
@@ -50,6 +54,12 @@ namespace Improv.Npc
         NpcAttention attention;                 // 없어도 된다. 있으면 집중도에 따라 생각하는 노력을 바꾼다 (T-5)
         CharacterVitals vitals;                 // 없어도 된다. 있으면 몸 상태를 느낌으로 프롬프트에 넣고, 죽으면 멈춘다 (R-020)
         readonly List<string> feelings = new();
+        NpcActions actions;                     // 없어도 된다. 있으면 LLM이 고른 행동(가기, 줍기, 먹기 등)을 한다 (T-6)
+        CharacterSleep sleep;
+        float idleTimer;
+        float feelingCheckTimer;
+        string lastFeelings = "";
+        string thinkReason;                     // 혼자 생각할 까닭. null이면 생각할 일이 없다
         readonly List<Improv.Characters.Sight.SightTarget> seenBuffer = new();
         ILlmClient client;
 
@@ -109,6 +119,8 @@ namespace Improv.Npc
             vision = GetComponent<Improv.Characters.Sight.Vision>();
             attention = GetComponent<NpcAttention>();
             vitals = GetComponent<CharacterVitals>();
+            actions = GetComponent<NpcActions>();
+            sleep = GetComponent<CharacterSleep>();
 
             if (sheet == null) { Debug.LogError($"[NpcDialogueBrain] '{name}'의 캐릭터 시트가 비어 있습니다.", this); enabled = false; return; }
             if (llm == null) { Debug.LogError($"[NpcDialogueBrain] '{name}'의 LLM 설정이 비어 있습니다.", this); enabled = false; return; }
@@ -122,12 +134,56 @@ namespace Improv.Npc
         {
             hearing.Heard += OnHeard;
             if (vitals != null) vitals.Died += OnDied;
+            if (actions != null) actions.ActionFinished += OnActionFinished;
         }
 
         void OnDisable()
         {
             hearing.Heard -= OnHeard;
             if (vitals != null) vitals.Died -= OnDied;
+            if (actions != null) actions.ActionFinished -= OnActionFinished;
+        }
+
+        // =====================================================================
+        // 혼자 생각하기 (T-6, P-4). 평소에는 코드가 몸을 움직이고, LLM은 이럴 때만 부른다:
+        // 들은 말이 있을 때(아래 OnHeard), 행동이 끝났을 때, 몸 상태가 달라졌을 때, 오래 아무 일 없을 때.
+        // =====================================================================
+
+        void Update()
+        {
+            if (actions == null) return;
+            bool asleep = sleep != null && sleep.IsAsleep;
+
+            // 몸 상태가 새로 나빠지면 한 번 생각한다 (배고파졌다, 지쳤다).
+            feelingCheckTimer -= Time.deltaTime;
+            if (feelingCheckTimer <= 0f && vitals != null)
+            {
+                feelingCheckTimer = 1f;
+                vitals.DescribeFeelings(feelings);
+                string now = string.Join(", ", feelings);
+                if (now != lastFeelings)
+                {
+                    bool worse = now.Length > 0 && !asleep;
+                    lastFeelings = now;
+                    if (worse) RequestThink($"몸 상태가 달라졌다: {now}");
+                }
+            }
+
+            // 할 일도, 들은 말도 없이 오래 지나면 한 번 생각한다. 자는 동안과 움직이는 동안은 세지 않는다.
+            if (busy || asleep || actions.IsBusy || pending.Count > 0) { idleTimer = 0f; return; }
+            idleTimer += Time.deltaTime;
+            if (idleTimer >= idleThinkSeconds) RequestThink("한동안 아무 일도 없었다. 무엇을 할지 생각한다");
+        }
+
+        void OnActionFinished(string result) => RequestThink($"방금 한 일: {result}");
+
+        /// <summary>혼자 생각할 까닭을 남긴다. 이미 생각 중이면 끝난 뒤 이어서 생각한다.</summary>
+        void RequestThink(string reason)
+        {
+            if (!enabled) return;
+            thinkReason = reason;
+            idleTimer = 0f;
+            if (!busy) _ = ReplyLoopAsync(destroyCancellationToken);
         }
 
         // 죽으면 두뇌도 멈춘다 (R-022). 진행 중인 LLM 답은 destroyCancellationToken이 아니라 enabled로 막는다.
@@ -159,8 +215,8 @@ namespace Improv.Npc
             busy = true;
             try
             {
-                // 답을 만드는 사이 새로 들린 말이 있으면 한 번 더 돈다.
-                while (pending.Count > 0)
+                // 답을 만드는 사이 새로 들린 말이나 생각할 일이 생기면 한 번 더 돈다.
+                while (pending.Count > 0 || thinkReason != null)
                 {
                     // Q-6: 바로 묻지 않고 잠깐 뜸을 들인다. 그 사이 다른 사람이 먼저 답하면 그 말도 pending에 쌓여
                     // 함께 LLM에 넘어가므로, "누가 이미 대답했네" 하고 스스로 판단할 수 있다 (R-016e).
@@ -174,6 +230,13 @@ namespace Improv.Npc
                         depth = Mathf.Min(depth, heard.ChainDepth);
                     }
                     pending.Clear();
+                    // 혼자 생각할 까닭도 기억에 한 줄로 남긴다. 말이 아니라 속생각이라 괄호로 구분한다.
+                    if (thinkReason != null)
+                    {
+                        shortTerm.Add((ChatMessage.User($"(속생각) {thinkReason}"), Time.time));
+                        depth = Mathf.Min(depth, 0);   // 스스로 한 생각은 NPC끼리 말의 연쇄가 아니다
+                        thinkReason = null;
+                    }
                     Forget();
 
                     // T-4 안전장치: NPC끼리 너무 오래 이어지면 듣기만 한다(기억에는 남는다). 대답할지 고르는 건 여전히 LLM이다.
@@ -189,7 +252,8 @@ namespace Improv.Npc
                     float attentionValue = attention != null ? attention.Value : 0.5f;
                     string attentionLevel = attention != null ? attention.LevelName : "보통";
                     if (vitals != null) vitals.DescribeFeelings(feelings); else feelings.Clear();
-                    var messages = new List<ChatMessage> { ChatMessage.System(NpcPrompt.BuildSystem(sheet, speaker.DisplayName, room, VisibleNames(), longTerm, attentionValue, attentionLevel, feelings)) };
+                    string actionContext = actions != null ? actions.DescribeForPrompt() : null;
+                    var messages = new List<ChatMessage> { ChatMessage.System(NpcPrompt.BuildSystem(sheet, speaker.DisplayName, room, VisibleNames(), longTerm, attentionValue, attentionLevel, feelings, actionContext)) };
                     // T-5: 집중도가 낮으면 최근 몇 줄만 떠올린다. 들은 말 자체는 단기 기억에 그대로 있다(흐려지지 않음).
                     int lines = attention != null ? attention.HistoryLines(shortTerm.Count) : shortTerm.Count;
                     for (int i = shortTerm.Count - lines; i < shortTerm.Count; i++) messages.Add(shortTerm[i].message);
@@ -262,6 +326,8 @@ namespace Improv.Npc
             public string say;       // 할 말. 빈 문자열이면 말하지 않는다
             public string remember;  // 집중해서 기억할 짧은 메모. 빈 문자열이면 기억하지 않는다 (R-016d)
             public float attention = -1f;   // 이 일을 얼마나 신경 쓰나 (0~1, T-5). 답에 없으면 -1로 남아 그대로 둔다
+            public string action;    // 할 행동: 가기, 줍기, 내려놓기, 먹기, 자기, 없음 (T-6)
+            public string target;    // 행동의 대상 이름 (방, 사람, 물건)
         }
 
         NpcDecision ParseDecision(string json)
@@ -303,6 +369,10 @@ namespace Improv.Npc
                 if (longTerm.Count > maxLongTermNotes) longTerm.RemoveAt(0);
                 Debug.Log($"[NPC {speaker.DisplayName}] 기억함: {decision.remember}", this);
             }
+
+            // 행동 (T-6). 무엇을 할지는 LLM이 골랐고, 몸으로 해내는 것은 NpcActions가 한다.
+            if (actions != null && !string.IsNullOrWhiteSpace(decision.action) && decision.action.Trim() != NpcActions.None)
+                actions.Execute(decision.action, decision.target);
 
             // 말하기. 말하지 않기로 고른 것도 선택이다.
             string line = Clean(decision.say ?? "");

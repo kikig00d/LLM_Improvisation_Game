@@ -10,7 +10,8 @@ namespace Improv.Npc
     public static class NpcPrompt
     {
         public static string BuildSystem(NpcCharacterSheet sheet, string myName, string roomName, IReadOnlyList<string> visibleNames, IReadOnlyList<string> longTermNotes,
-                                         float attention = 0.5f, string attentionLevel = "보통", IReadOnlyList<string> feelings = null)
+                                         float attention = 0.5f, string attentionLevel = "보통", IReadOnlyList<string> feelings = null,
+                                         string actionContext = null)
         {
             var sb = new StringBuilder();
             // 이름은 시트가 아니라 지금 이름을 쓴다. 개명하면 바뀐다 (F-17). 시트의 이름은 처음 이름일 뿐이다.
@@ -42,6 +43,14 @@ namespace Improv.Npc
                 sb.AppendLine("비밀은 이미 알고 있으니 remember에 적지 않는다.");
                 sb.AppendLine();
             }
+            // T-6: 할 수 있는 행동과, 행동에 쓸 수 있는 대상(인지한 것만, P-3).
+            if (!string.IsNullOrEmpty(actionContext))
+            {
+                sb.AppendLine("너는 직접 움직일 수 있다. 할 수 있는 행동: 가기(곳이나 사람), 줍기(물건), 내려놓기, 먹기(음식), 자기(침대), 없음.");
+                sb.Append(actionContext);
+                sb.AppendLine("행동의 대상은 위에 적힌 곳, 사람, 물건 이름 그대로 쓴다. 모르는 것은 고를 수 없다.");
+                sb.AppendLine();
+            }
             sb.AppendLine($"말투: {sheet.speechStyle}");
             sb.AppendLine("규칙:");
             sb.AppendLine("- 주변에서 들린 말은 \"이름: 말\" 형식으로 주어진다. 말한 사람의 말투가 서툴러도 뜻을 짐작한다.");
@@ -56,6 +65,7 @@ namespace Improv.Npc
             // T-4 시험에서 일본어가 섞이고("막ってる"), 같은 말을 되풀이했다.
             sb.AppendLine("- 한국어로만 말한다.");
             sb.AppendLine("- 네가 앞에서 한 말이나 남이 방금 한 말을 그대로 되풀이하지 않는다. 할 말이 없으면 말하지 않는다.");
+            sb.AppendLine("- (속생각)은 남이 한 말이 아니라 네 머릿속 생각이다. 혼자 있을 때 말은 꼭 필요할 때만 하고, 할 일이 있으면 action으로 한다. 할 일이 없으면 action은 없음.");
             sb.AppendLine("- 자신이 AI라고 말하지 않는다.");
             sb.AppendLine("- 들은 말은 시간이 지나면 잊는다. 나중에도 꼭 기억해야 할 것만 remember에 짧게 적는다. 대부분은 비워 둔다.");
             // T-5: 집중도는 이 캐릭터가 지금 벌어진 일을 얼마나 신경 쓰는지다. 성격에 따라 LLM이 고른다.
@@ -64,7 +74,7 @@ namespace Improv.Npc
             sb.AppendLine();
             // R-016b, R-016d: 행동과 기억도 LLM이 고른다. 코드가 강제하지 않는다.
             sb.AppendLine("반드시 아래 JSON 한 개로만 답한다:");
-            sb.AppendLine("{\"look_at\": \"돌아볼 사람 이름. 돌아보지 않으면 빈 문자열\", \"say\": \"할 말. 말하지 않으면 빈 문자열\", \"remember\": \"꼭 기억할 짧은 메모. 없으면 빈 문자열\", \"attention\": 0~1 숫자}");
+            sb.AppendLine("{\"look_at\": \"돌아볼 사람 이름. 돌아보지 않으면 빈 문자열\", \"say\": \"할 말. 말하지 않으면 빈 문자열\", \"remember\": \"꼭 기억할 짧은 메모. 없으면 빈 문자열\", \"attention\": 0~1 숫자, \"action\": \"가기/줍기/내려놓기/먹기/자기/없음 중 하나\", \"target\": \"행동의 대상 이름. 없으면 빈 문자열\"}");
             return sb.ToString();
         }
     }
