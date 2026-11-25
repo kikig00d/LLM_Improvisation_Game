@@ -41,6 +41,12 @@ namespace Improv.Npc
         [Header("혼자 생각하기 (계획서 T-6, P-4 [가정])")]
         [Tooltip("아무 말도 안 들리고 할 일도 없으면 이 시간(게임 초)마다 한 번 혼자 무엇을 할지 생각한다. 50 = 게임 1시간")]
         [SerializeField] float idleThinkSeconds = 50f;
+        [Tooltip("판이 시작하고 처음 한 번 둘러보고 생각하기까지의 시간(게임 초). 여럿이 한꺼번에 묻지 않게 이 범위에서 무작위")]
+        [SerializeField] Vector2 firstThinkDelay = new(1f, 6f);
+        [Tooltip("이 시간(게임 초) 넘게 못 본 사람이 눈에 들어오면 한 번 생각한다")]
+        [SerializeField] float noticeAfterUnseen = 120f;
+        [Tooltip("혼자 하는 생각(말을 들은 때 말고) 사이의 최소 간격(게임 초). 행동 → 생각 → 행동이 LLM 호출 고리가 되지 않게 (P-4)")]
+        [SerializeField] float minSelfThinkInterval = 8f;
 
         // =====================================================================
         // #2. 상태
@@ -60,6 +66,11 @@ namespace Improv.Npc
         float feelingCheckTimer;
         string lastFeelings = "";
         string thinkReason;                     // 혼자 생각할 까닭. null이면 생각할 일이 없다
+        float firstThinkAt = -1f;               // 처음 생각할 게임 시각. -1이면 이미 했다
+        float nextSelfThinkAt;                  // 이 게임 시각 전에는 혼자 생각을 시작하지 않는다
+        float noticeTimer;
+        readonly Dictionary<int, float> lastSeenAt = new();   // 사람 id → 마지막으로 본 게임 시각
+        readonly List<string> noticed = new();
         readonly List<Improv.Characters.Sight.SightTarget> seenBuffer = new();
         ILlmClient client;
 
@@ -130,6 +141,20 @@ namespace Improv.Npc
             if (attention != null) attention.Init(sheet.baselineAttention);
         }
 
+        /// <summary>
+        /// 시트를 바꿔 끼운다 (T-8: 판이 시작할 때 CastGenerator가 만든 시트). 이름과 평소 집중도도 새 시트대로.
+        /// 아직 아무 말도 듣기 전에만 부른다. 기억은 지우지 않는다.
+        /// </summary>
+        public void ApplySheet(NpcCharacterSheet newSheet)
+        {
+            if (newSheet == null) return;
+            sheet = newSheet;
+            speaker.SetDisplayName(sheet.displayName);
+            if (attention != null) attention.Init(sheet.baselineAttention);
+        }
+
+        public NpcCharacterSheet Sheet => sheet;
+
         void OnEnable()
         {
             hearing.Heard += OnHeard;
@@ -149,10 +174,34 @@ namespace Improv.Npc
         // 들은 말이 있을 때(아래 OnHeard), 행동이 끝났을 때, 몸 상태가 달라졌을 때, 오래 아무 일 없을 때.
         // =====================================================================
 
+        // Start는 처음 켜질 때 한 번 불린다. 시트를 만드는 동안 꺼져 있었다면 다 만든 뒤에 불린다 (T-8 CastGenerator).
+        void Start()
+        {
+            // 판이 시작하면 각자 한 번 둘러보고 생각한다. T-8 확인 때 첫 채팅 전까지 아무도 움직이지 않았다(계기가 없어서).
+            firstThinkAt = Time.time + UnityEngine.Random.Range(firstThinkDelay.x, firstThinkDelay.y);
+        }
+
         void Update()
         {
             if (actions == null) return;
             bool asleep = sleep != null && sleep.IsAsleep;
+
+            if (thinkReason != null && !busy && Time.time >= nextSelfThinkAt) _ = ReplyLoopAsync(destroyCancellationToken);
+
+            if (firstThinkAt >= 0f && Time.time >= firstThinkAt)
+            {
+                firstThinkAt = -1f;
+                NoticePeople(silent: true);   // 지금 보이는 사람은 처음 생각에 함께 들어가니 따로 알리지 않는다
+                RequestThink("산장에 사람들이 모였다. 주변을 둘러보고 무엇을 할지 생각한다");
+            }
+
+            // 한동안 못 본 사람이 눈에 들어오면 한 번 생각한다 (과거로 얽힌 사람과 마주치는 순간 등).
+            noticeTimer -= Time.deltaTime;
+            if (noticeTimer <= 0f && firstThinkAt < 0f && !asleep)
+            {
+                noticeTimer = 0.5f;
+                NoticePeople(silent: false);
+            }
 
             // 몸 상태가 새로 나빠지면 한 번 생각한다 (배고파졌다, 지쳤다).
             feelingCheckTimer -= Time.deltaTime;
@@ -177,13 +226,33 @@ namespace Improv.Npc
 
         void OnActionFinished(string result) => RequestThink($"방금 한 일: {result}");
 
+        // 보이는 사람을 훑어 "새로 눈에 들어온 사람"을 찾는다. 사람은 이름이 아니라 id로 센다 (F-17).
+        void NoticePeople(bool silent)
+        {
+            if (vision == null) return;
+            noticed.Clear();
+            vision.CollectVisible(seenBuffer);
+            foreach (var target in seenBuffer)
+            {
+                var other = target.GetComponent<Speaker>();
+                var identity = target.GetComponent<CharacterIdentity>();
+                if (other == null || identity == null) continue;
+                bool fresh = !lastSeenAt.TryGetValue(identity.Id, out float last) || Time.time - last > noticeAfterUnseen;
+                lastSeenAt[identity.Id] = Time.time;
+                if (fresh) noticed.Add(other.DisplayName);
+            }
+            // "~이(가) 눈에 들어왔다"는 LLM이 눈(雪)으로 읽고 "눈 들어왔어?"라고 답했다(T-8 프리셋 시험). 조사 없이 쓴다.
+            if (!silent && noticed.Count > 0) RequestThink($"새로 보이는 사람: {string.Join(", ", noticed)}");
+        }
+
         /// <summary>혼자 생각할 까닭을 남긴다. 이미 생각 중이면 끝난 뒤 이어서 생각한다.</summary>
         void RequestThink(string reason)
         {
             if (!enabled) return;
             thinkReason = reason;
             idleTimer = 0f;
-            if (!busy) _ = ReplyLoopAsync(destroyCancellationToken);
+            if (!busy && Time.time >= nextSelfThinkAt) _ = ReplyLoopAsync(destroyCancellationToken);
+            // 간격이 아직 안 됐으면 까닭만 남겨 둔다. Update가 때가 되면 시작한다 (나중 까닭이 앞의 것을 덮는다).
         }
 
         // 죽으면 두뇌도 멈춘다 (R-022). 진행 중인 LLM 답은 destroyCancellationToken이 아니라 enabled로 막는다.
@@ -216,7 +285,7 @@ namespace Improv.Npc
             try
             {
                 // 답을 만드는 사이 새로 들린 말이나 생각할 일이 생기면 한 번 더 돈다.
-                while (pending.Count > 0 || thinkReason != null)
+                while (pending.Count > 0 || (thinkReason != null && Time.time >= nextSelfThinkAt))
                 {
                     // Q-6: 바로 묻지 않고 잠깐 뜸을 들인다. 그 사이 다른 사람이 먼저 답하면 그 말도 pending에 쌓여
                     // 함께 LLM에 넘어가므로, "누가 이미 대답했네" 하고 스스로 판단할 수 있다 (R-016e).
@@ -236,6 +305,7 @@ namespace Improv.Npc
                         shortTerm.Add((ChatMessage.User($"(속생각) {thinkReason}"), Time.time));
                         depth = Mathf.Min(depth, 0);   // 스스로 한 생각은 NPC끼리 말의 연쇄가 아니다
                         thinkReason = null;
+                        nextSelfThinkAt = Time.time + minSelfThinkInterval;
                     }
                     Forget();
 

@@ -26,6 +26,7 @@
 - 사람은 `CharacterIdentity.Id`(바뀌지 않는 번호)로 구분한다. 이름은 바뀔 수 있는 꼬리표라(개명, 동명이인) 코드에서 이름을 키로 쓰지 않는다. 단, NPC가 기억하는 것은 들은 이름뿐이다(P-3). 플레이어 단어 사전의 이름은 지금 씬의 이름으로 게임 중 채운다.
 - 시간은 `GameClock` 하나가 정하고 속도를 `Time.timeScale`로 건다. 그래서 `Time.time`/`Time.deltaTime`이 곧 게임 시간이다(멈추면 0). 실제 시간이 필요한 곳(깨우기 입력 지연 등)만 `Time.unscaledTime`을 쓰고, 실제 시간으로 오는 LLM 답은 `GameClock.IsPaused` 동안 들고 있다가 쓴다.
 - 방(`Room`)은 문·계단·천장 같은 경계로 닫힌 공간의 영역이다(GDD R-024, 지금은 손으로 그린 사각형). NPC가 방으로 가면 그 영역에 들어서는 것이 도착이다. NPC 행동은 LLM이 고르고 `NpcActions`(무엇을, 본 것 기억)와 `NpcNavigator`(층 + x 길 찾기, 문 열기)가 같은 몸으로 해낸다.
+- NPC 시트는 판이 시작할 때 `CastGenerator`가 만든다(목록 `Assets/Data/Generation/CharacterTables.asset`, GDD R-026). 겹치는 과거의 진실은 생성기가 들고 있고, NPC의 LLM에는 자기 판본만 넘긴다. 시험할 때는 `usePreset`(기본 켬)으로 미리 써 둔 판(`Assets/Data/Characters/TestCast/TestCastPreset.asset`)을 로딩 없이 쓰고, 생성을 보려면 끈다. 손으로 쓴 옛 시트를 쓰려면 CastGenerator를 끈다.
 - UI 위의 클릭이 월드로 넘어가지 않게 막을 요소에는 USS 클래스 `ui-solid`를 붙인다 (`UiPointer`).
 - UI는 UI Toolkit(UXML/USS, `Assets/UI`)으로 만들고 글꼴은 Noto Sans KR을 쓴다. 튜닝 데이터(캐릭터 시트, LLM 설정)는 ScriptableObject 에셋(`Assets/Data`)에 둔다.
 - 캐릭터의 몸(`CharacterMotor`)과 조종자(`PlayerInputDriver`, 나중에 NPC AI)를 분리한다. NPC는 같은 몸을 `SetMoveInput()`으로 움직인다.

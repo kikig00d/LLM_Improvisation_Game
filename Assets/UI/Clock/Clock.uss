@@ -1,5 +1,5 @@
 /* 시계 UI 모양. Dialogue.uss와 같은 글꼴을 쓴다. */
-.clock, .sleep-overlay, .pause-banner, .vitals, .death-overlay {
+.clock, .sleep-overlay, .pause-banner, .vitals, .death-overlay, .generating-overlay {
     -unity-font-definition: url("project://database/Assets/Fonts/NotoSansKR/NotoSansKR-Regular.otf");
 }
 
@@ -152,4 +152,19 @@
 .death-sub {
     font-size: 20px;
     color: rgb(230, 200, 200);
+}
+
+/* ===== 판 시작: 캐릭터 시트 만드는 중 (T-8) ===== */
+.generating-overlay {
+    position: absolute;
+    left: 0; top: 0; right: 0; bottom: 0;
+    background-color: rgb(8, 12, 24);
+    justify-content: center;
+    align-items: center;
+    display: none;
+}
+
+.generating-text {
+    font-size: 26px;
+    color: rgb(220, 228, 245);
 }

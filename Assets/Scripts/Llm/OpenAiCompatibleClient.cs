@@ -83,7 +83,7 @@ namespace Improv.Llm
                 request.uploadHandler = new UploadHandlerRaw(Encoding.UTF8.GetBytes(requestJson));
                 request.downloadHandler = new DownloadHandlerBuffer();
                 request.SetRequestHeader("Content-Type", "application/json");
-                request.timeout = timeoutSeconds;
+                request.timeout = options != null && options.TimeoutSeconds > 0 ? options.TimeoutSeconds : timeoutSeconds;
 
                 // 게임이 끝나거나 오브젝트가 사라지면 요청도 끊는다. 안 그러면 Play를 멈춘 뒤에도 기다린다.
                 using (cancel.Register(request.Abort))
@@ -139,6 +139,8 @@ namespace Improv.Llm
             // JsonUtility는 빈 값도 항상 써 버려서, 선택 항목은 필요할 때만 끝에 끼워 넣는다.
             if (!string.IsNullOrEmpty(effort))
                 json = json.Insert(json.Length - 1, $",\"reasoning_effort\":\"{effort}\"");
+            if (options?.Seed != null)
+                json = json.Insert(json.Length - 1, $",\"seed\":{options.Seed.Value}");
             // OpenAI 형식의 "JSON으로만 답하기" 옵션. 서버가 문법에 맞는 JSON만 나오게 막아 준다.
             if (jsonMode)
                 json = json.Insert(json.Length - 1, ",\"response_format\":{\"type\":\"json_object\"}");

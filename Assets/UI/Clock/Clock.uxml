@@ -22,6 +22,11 @@
         <ui:Label class="death-sub" text="패배 · Play를 다시 시작하세요" picking-mode="Ignore" />
     </ui:VisualElement>
 
+    <!-- 판이 시작할 때 캐릭터 시트를 만드는 동안 화면을 덮는다 (T-8, CastGeneratingView). 클릭도 막는다. -->
+    <ui:VisualElement name="generating-overlay" class="generating-overlay ui-solid">
+        <ui:Label name="generating-text" class="generating-text" />
+    </ui:VisualElement>
+
     <!-- 오른쪽 위 시계와 속도 버튼 (크루세이더 킹즈처럼) -->
     <ui:VisualElement name="clock-panel" class="clock ui-solid">
         <ui:Label name="clock-time" class="clock-time" />

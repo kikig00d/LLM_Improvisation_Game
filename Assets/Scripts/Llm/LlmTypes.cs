@@ -60,5 +60,7 @@ namespace Improv.Llm
     {
         public string ReasoningEffort;   // "none"이면 생각 끔, "low" 등이면 생각 켬. null이면 기본값
         public int MaxTokens;            // 0이면 기본값. 생각을 켜면 생각 글자도 여기에 들어가서 넉넉해야 한다
+        public int? Seed;                // 있으면 같은 씨드 + 같은 질문에 같은 답을 내려 한다 (T-8 캐릭터 생성 재현). int?는 "값이 없을 수도 있는 int"
+        public int TimeoutSeconds;       // 0이면 기본값(LlmSettings). 판 시작 때 과거 쓰기처럼 한 번뿐인 긴 답은 길게 준다
     }
 }

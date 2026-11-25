@@ -43,6 +43,24 @@ namespace Improv.Npc
                 sb.AppendLine("비밀은 이미 알고 있으니 remember에 적지 않는다.");
                 sb.AppendLine();
             }
+            // T-8, IDEAS I-9: 믿는 것은 "해석 렌즈"다. 같은 일을 겪어도 캐릭터마다 자기 식으로 해석하고, 기억도 그렇게 남는다.
+            if (sheet.beliefs != null && sheet.beliefs.Count > 0)
+            {
+                sb.AppendLine($"네가 굳게 믿는 것: {string.Join(" / ", sheet.beliefs)}");
+                sb.AppendLine("무슨 일을 겪으면 이 믿음으로 해석한다. remember에 적을 때도 네 믿음대로 해석한 문장으로 적는다.");
+                sb.AppendLine();
+            }
+            // T-8, I-11: 아는 사람과의 과거. 이 캐릭터의 기억(판본)이라 진실과 조금 다를 수 있지만, 본인에게는 이것이 사실이다.
+            if (sheet.pasts != null && sheet.pasts.Count > 0)
+            {
+                // 사용자 결정(2026-11-25): 긴 서술 대신 규격 줄(육하원칙 칸)로 넘긴다. 형식 설명을 한 번 붙인다.
+                sb.AppendLine($"네가 아는 사람과의 과거 (네 기억). {Generation.PastFormat.Legend}");
+                foreach (string past in sheet.pasts)
+                    sb.AppendLine(past.TrimStart().StartsWith("[") ? past.TrimEnd() : $"- {past}");   // 옛 서술형 시트도 읽히게
+                // 털어놓을지, 숨길지, 티를 낼지는 LLM이 성격대로 고른다 (R-016b). 코드는 정하지 않는다.
+                sb.AppendLine("그 사람을 만나면 이 과거가 태도에 묻어난다. 누구에게 얼마나 말할지는 네 성격대로 정한다.");
+                sb.AppendLine();
+            }
             // T-6: 할 수 있는 행동과, 행동에 쓸 수 있는 대상(인지한 것만, P-3).
             if (!string.IsNullOrEmpty(actionContext))
             {
