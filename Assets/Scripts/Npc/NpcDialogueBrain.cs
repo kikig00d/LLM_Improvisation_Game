@@ -130,6 +130,20 @@ namespace Improv.Npc
             if (attention != null) attention.Init(sheet.baselineAttention);
         }
 
+        /// <summary>
+        /// 시트를 바꿔 끼운다 (T-8: 판이 시작할 때 CastGenerator가 만든 시트). 이름과 평소 집중도도 새 시트대로.
+        /// 아직 아무 말도 듣기 전에만 부른다. 기억은 지우지 않는다.
+        /// </summary>
+        public void ApplySheet(NpcCharacterSheet newSheet)
+        {
+            if (newSheet == null) return;
+            sheet = newSheet;
+            speaker.SetDisplayName(sheet.displayName);
+            if (attention != null) attention.Init(sheet.baselineAttention);
+        }
+
+        public NpcCharacterSheet Sheet => sheet;
+
         void OnEnable()
         {
             hearing.Heard += OnHeard;

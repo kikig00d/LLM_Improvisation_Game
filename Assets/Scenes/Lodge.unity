@@ -1248,6 +1248,7 @@ GameObject:
   - component: {fileID: 148566843}
   - component: {fileID: 148566842}
   - component: {fileID: 148566845}
+  - component: {fileID: 148566846}
   m_Layer: 0
   m_Name: ClockUI
   m_TagString: Untagged
@@ -1319,6 +1320,18 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Improv.UI.VitalsView
   target: {fileID: 1577261669}
   warnBelow: 30
+--- !u!114 &148566846
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 148566841}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 51012f5ed3b2e404c83165988d300c2d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Improv.UI.CastGeneratingView
 --- !u!1 &149817340
 GameObject:
   m_ObjectHideFlags: 0
@@ -2898,6 +2911,7 @@ MonoBehaviour:
   lookInterval: 0.3
   personStopDistance: 1.2
   itemStopDistance: 0.7
+  roomEnterMargin: 0.4
 --- !u!114 &285436552
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -6735,6 +6749,60 @@ SpriteRenderer:
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
   m_SpriteSortPoint: 0
+--- !u!1 &669132450
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 669132452}
+  - component: {fileID: 669132451}
+  m_Layer: 0
+  m_Name: CastGenerator
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &669132451
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 669132450}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f4d83f26aba8351419d603118818dc29, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Improv.Npc.Generation.CastGenerator
+  tables: {fileID: 11400000, guid: 9fb122f196bf5d84faaaf7bd0001e4be, type: 2}
+  llm: {fileID: 11400000, guid: 683d3cf386496cc4d81edf0518a81da2, type: 2}
+  npcs:
+  - {fileID: 1931264161}
+  - {fileID: 1235027954}
+  - {fileID: 285436537}
+  seed: 0
+  reasoningEffort: low
+  maxTokens: 3000
+  minAgeAtPast: 10
+--- !u!4 &669132452
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 669132450}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &670935944
 GameObject:
   m_ObjectHideFlags: 0
@@ -12253,6 +12321,7 @@ MonoBehaviour:
   lookInterval: 0.3
   personStopDistance: 1.2
   itemStopDistance: 0.7
+  roomEnterMargin: 0.4
 --- !u!114 &1235027969
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -19533,6 +19602,7 @@ MonoBehaviour:
   lookInterval: 0.3
   personStopDistance: 1.2
   itemStopDistance: 0.7
+  roomEnterMargin: 0.4
 --- !u!114 &1931264178
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -21898,3 +21968,4 @@ SceneRoots:
   - {fileID: 1235027963}
   - {fileID: 916111037}
   - {fileID: 148566844}
+  - {fileID: 669132452}

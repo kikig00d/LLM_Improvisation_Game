@@ -1,10 +1,11 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace Improv.Npc
 {
     /// <summary>
     /// NPC 캐릭터 시트 (GDD 3장 2번). 겉으로 드러난 모습과 숨긴 비밀을 나눠 적는다.
-    /// MVP에서는 손으로 쓴 시트를 쓴다. 자동 생성은 나중 (GDD 2장).
+    /// 손으로 쓴 시트(에셋)도 되고, 매 판 시작할 때 CastGenerator가 코드로 만든 시트도 된다 (계획서 T-8).
     /// </summary>
     [CreateAssetMenu(fileName = "NpcSheet", menuName = "Improv/NPC Character Sheet")]
     public class NpcCharacterSheet : ScriptableObject
@@ -22,5 +23,12 @@ namespace Improv.Npc
 
         [Header("말투")]
         [TextArea(3, 8)] public string speechStyle = "아주 짧고 투박한 문장.";
+
+        // 아래는 자동 생성(T-8, CastGenerator)이 채운다. 손으로 쓴 시트는 비워 두면 프롬프트에 안 들어간다.
+        [Header("믿는 것 (도그마, IDEAS I-9). 같은 일을 이 렌즈로 해석한다")]
+        public List<string> beliefs = new();
+
+        [Header("아는 사람과의 과거 (I-11). 이 캐릭터가 기억하는 판본이다. 진실과 다를 수 있다")]
+        [TextArea(2, 6)] public List<string> pasts = new();
     }
 }
