@@ -79,7 +79,7 @@ namespace Improv.Characters
 
         public float fadeSeconds = 1800f;      // 가벼운 마음이 사라지기까지 (게임 초). 1800 = 게임 1.5일 (하루 1200초)
         public int lastingAt = 20;             // 이 크기 이상이면 흐려지지 않는다 (선을 넘은 일)
-        public int maxChange = 50;             // LLM이 고른 값을 이 범위로 자른다 (안전장치)
+        public int maxChange = 100;            // LLM이 고른 값을 이 범위로 자른다. 사용자 2026-11-25: 모자라면 -100~100
         public float cancelSpeedUp = 0.5f;     // 다 상쇄되면 남은 시간이 이 비율만큼 줄어든다
 
         // =====================================================================
