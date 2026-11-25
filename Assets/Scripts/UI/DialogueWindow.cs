@@ -192,10 +192,12 @@ namespace Improv.UI
 
         void OnKeyDown(KeyDownEvent e)
         {
+            if (logTyping) Debug.Log($"[대화창 입력] 키 {e.keyCode} 글자 {(int)e.character} 값 '{input.value}' 커서 {input.cursorIndex}", this);
             // 키 하나를 누르면 "키 이벤트"와 "글자 이벤트"가 따로 온다. 글자 쪽의 공백·엔터·탭은 삼켜서 입력칸에 안 들어가게 한다.
             if (e.keyCode == KeyCode.None)
             {
-                if (e.character == ' ' || e.character == '\n' || e.character == '\r' || e.character == '\t')
+                // '\b'(백스페이스 글자)도 삼킨다. 지우기는 아래 Backspace 키에서 직접 한다 (F-18).
+                if (e.character == ' ' || e.character == '\n' || e.character == '\r' || e.character == '\t' || e.character == '\b')
                     e.StopImmediatePropagation();
                 return;
             }
@@ -215,6 +217,12 @@ namespace Improv.UI
                     if (TypedText().Length > 0) CommitSelected();
                     else SendSentence();
                     break;
+                case KeyCode.Backspace:
+                    // F-18: 유니티 입력칸이 백스페이스를 받아도 글자를 지우지 않았다(코드로 키 이벤트를 보내 재현).
+                    // 한글을 조합하는 중이면 입력기가 자모를 지우게 두고, 조합이 끝난 글자만 여기서 직접 지운다.
+                    if (composition.Length > 0) return;
+                    DeleteBackward();
+                    break;
                 case KeyCode.UpArrow:
                     MoveSelection(-1);
                     break;
@@ -225,6 +233,22 @@ namespace Improv.UI
                     return;   // 나머지 키(글자, 백스페이스)는 입력칸이 원래대로 처리한다
             }
             e.StopImmediatePropagation();
+        }
+
+        /// <summary>커서 앞 글자 하나를 지운다. 여러 글자를 골라 둔 상태면 고른 부분을 지운다.</summary>
+        void DeleteBackward()
+        {
+            string value = input.value ?? "";
+            // 커서와 선택 끝 중 작은 쪽이 시작, 큰 쪽이 끝. 커서가 글자 수를 넘어 있을 수도 있어 길이로 자른다.
+            int start = Mathf.Clamp(Mathf.Min(input.cursorIndex, input.selectIndex), 0, value.Length);
+            int end = Mathf.Clamp(Mathf.Max(input.cursorIndex, input.selectIndex), 0, value.Length);
+            if (start == end)
+            {
+                if (start == 0) return;   // 지울 글자가 없다
+                start--;
+            }
+            input.value = value.Remove(start, end - start);   // 값이 바뀌면 후보도 다시 계산된다
+            input.SelectRange(start, start);
         }
 
         void OnImeComposition(IMECompositionString text)
@@ -248,7 +272,12 @@ namespace Improv.UI
             input.SelectRange(0, 0);
         }
 
-        public string TypedText() => ((input?.value ?? "") + composition).Trim();
+        // 입력칸 값에는 조합 중인 글자가 이미 들어 있을 때가 많다(대화창 입력 로그로 확인). 그때는 두 번 붙이지 않는다.
+        public string TypedText()
+        {
+            string value = input?.value ?? "";
+            return (composition.Length > 0 && !value.EndsWith(composition) ? value + composition : value).Trim();
+        }
 
         public void CommitSelected()
         {
