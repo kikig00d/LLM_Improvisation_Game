@@ -254,6 +254,9 @@ namespace Improv.Npc.Generation
                 if (mine == null) continue;
                 // 규격 줄로 찍는다 (PastFormat). 긴 서술보다 주어와 사실이 덜 흔들린다 (사용자 결정 2026-11-25).
                 sheet.pasts.Add(PastFormat.Memory(past.Other(m).name, past.heavy, mine));
+                // 묵은 감정 (I-12). LLM이 숫자를 안 줬으면 짙음에 따라 코드가 채운다 [가정].
+                int affinity = mine.affinity >= 0 ? Mathf.Clamp(mine.affinity, 0, 100) : past.heavy ? 25 : 60;
+                sheet.oldFeelings.Add(new OldFeeling { name = past.Other(m).name, value = affinity, why = mine.feeling });
             }
             return sheet;
         }
@@ -291,8 +294,8 @@ namespace Improv.Npc.Generation
             {
                 sb.AppendLine($"* {p.a.name} - {p.b.name}: {p.kind}{(p.heavy ? " (짙음)" : "")}{(p.fromLlm ? "" : " [대체 글]")}");
                 sb.AppendLine($"  진실: {PastFormat.Truth(p)}");
-                sb.AppendLine($"  {p.a.name}의 기억: {PastFormat.Memory(p.b.name, p.heavy, p.versionA)}");
-                sb.AppendLine($"  {p.b.name}의 기억: {PastFormat.Memory(p.a.name, p.heavy, p.versionB)}");
+                sb.AppendLine($"  {p.a.name}의 기억: {PastFormat.Memory(p.b.name, p.heavy, p.versionA)} (묵은 감정 {p.versionA.affinity})");
+                sb.AppendLine($"  {p.b.name}의 기억: {PastFormat.Memory(p.a.name, p.heavy, p.versionB)} (묵은 감정 {p.versionB.affinity})");
             }
             Debug.Log(sb.ToString(), this);
         }

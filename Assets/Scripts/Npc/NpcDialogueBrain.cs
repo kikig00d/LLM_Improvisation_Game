@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using Improv.Characters;
@@ -73,6 +74,8 @@ namespace Improv.Npc
         readonly List<string> noticed = new();
         readonly List<Improv.Characters.Sight.SightTarget> seenBuffer = new();
         ILlmClient client;
+        RelationBook relations;                 // 사람(과 이제까지의 나)에 대한 마음 (I-12, R-027). Start에서 시트의 묵은 감정으로 채운다
+        readonly StringBuilder relationText = new();
 
         // 단기 기억: 들은 말과 내가 한 말, 그리고 그때의 시각. 시간이 지나면 잊는다 (R-016d).
         // (ChatMessage, float) 는 튜플: 이름 없는 작은 struct를 그 자리에서 만드는 문법.
@@ -115,6 +118,7 @@ namespace Improv.Npc
             return names;
         }
         public int ShortTermCount => shortTerm.Count;
+        public RelationBook Relations => relations;   // 나중에 관계도 창(T-9)이 읽는다
         public IReadOnlyList<string> LongTerm => longTerm;
 
         // =====================================================================
@@ -179,6 +183,29 @@ namespace Improv.Npc
         {
             // 판이 시작하면 각자 한 번 둘러보고 생각한다. T-8 확인 때 첫 채팅 전까지 아무도 움직이지 않았다(계기가 없어서).
             firstThinkAt = Time.time + UnityEngine.Random.Range(firstThinkDelay.x, firstThinkDelay.y);
+            SeedRelations();
+        }
+
+        // 시트의 묵은 감정을 관계도에 옮긴다. Start는 CastGenerator가 시트를 끼운 뒤에 돈다(생성 중엔 두뇌가 꺼져 있다).
+        // 시트는 이름으로 적혀 있어서 여기서 한 번만 id로 바꾼다. 그 뒤로 코드는 id로만 사람을 구분한다 (F-17).
+        void SeedRelations()
+        {
+            var me = GetComponent<CharacterIdentity>();
+            relations = new RelationBook(me != null ? me.Id : -1);
+            relations.SetOld(relations.selfId, sheet.selfFeeling, sheet.selfWhy);
+            foreach (var old in sheet.oldFeelings)
+            {
+                var who = CharacterIdentity.All.Find(c => c.DisplayName == old.name);
+                if (who == null) { Debug.LogWarning($"[NPC {speaker.DisplayName}] 묵은 감정의 상대 '{old.name}'를 씬에서 못 찾음", this); continue; }
+                relations.SetOld(who.Id, old.value, old.why);
+            }
+        }
+
+        string DescribeRelations()
+        {
+            relationText.Clear();
+            relations?.Describe(relationText, id => CharacterIdentity.Find(id)?.DisplayName, Time.time);
+            return relationText.ToString();
         }
 
         void Update()
@@ -293,6 +320,7 @@ namespace Improv.Npc
 
                     // 이번에 들은 말 중 가장 작은 번호를 기준으로 한다. 플레이어 말(0)이 섞였으면 다시 처음부터 센다.
                     int depth = int.MaxValue;
+                    bool heardSpeech = pending.Count > 0;   // 이번 차례에 남의 말을 들었나. 마음은 겪은 일로만 바뀐다 (I-12)
                     foreach (var heard in pending)
                     {
                         shortTerm.Add((ChatMessage.User($"{heard.SpeakerName}: {heard.Text}"), heard.Time));
@@ -323,7 +351,7 @@ namespace Improv.Npc
                     string attentionLevel = attention != null ? attention.LevelName : "보통";
                     if (vitals != null) vitals.DescribeFeelings(feelings); else feelings.Clear();
                     string actionContext = actions != null ? actions.DescribeForPrompt() : null;
-                    var messages = new List<ChatMessage> { ChatMessage.System(NpcPrompt.BuildSystem(sheet, speaker.DisplayName, room, VisibleNames(), longTerm, attentionValue, attentionLevel, feelings, actionContext)) };
+                    var messages = new List<ChatMessage> { ChatMessage.System(NpcPrompt.BuildSystem(sheet, speaker.DisplayName, room, VisibleNames(), longTerm, attentionValue, attentionLevel, feelings, actionContext, DescribeRelations())) };
                     // T-5: 집중도가 낮으면 최근 몇 줄만 떠올린다. 들은 말 자체는 단기 기억에 그대로 있다(흐려지지 않음).
                     int lines = attention != null ? attention.HistoryLines(shortTerm.Count) : shortTerm.Count;
                     for (int i = shortTerm.Count - lines; i < shortTerm.Count; i++) messages.Add(shortTerm[i].message);
@@ -355,7 +383,7 @@ namespace Improv.Npc
 
                     // 모델이 쓴 JSON을 그대로 기억에 넣는다. 다음 답도 같은 형식을 따라 하게 된다.
                     shortTerm.Add((ChatMessage.Assistant(reply.Text), Time.time));
-                    ActOn(ParseDecision(reply.Text));
+                    ActOn(ParseDecision(reply.Text), heardSpeech);
                 }
             }
             catch (OperationCanceledException) { }
@@ -398,6 +426,17 @@ namespace Improv.Npc
             public float attention = -1f;   // 이 일을 얼마나 신경 쓰나 (0~1, T-5). 답에 없으면 -1로 남아 그대로 둔다
             public string action;    // 할 행동: 가기, 줍기, 내려놓기, 먹기, 자기, 없음 (T-6)
             public string target;    // 행동의 대상 이름 (방, 사람, 물건)
+            public RelationChange[] relation;   // 달라진 마음들 (I-12). 대부분 비어 있다
+        }
+
+        [Serializable]
+        class RelationChange
+        {
+            public string who;       // 사람 이름, 또는 "나"(이제까지의 나)
+            public string kind;      // "호감" 또는 "애정"
+            public string why;       // 짧은 까닭
+            public int value;        // LLM이 그 캐릭터로서 느낀 만큼 (I-12 답 b)
+            public string cancels;   // 풀어 주는 앞 까닭. 없으면 빈 문자열
         }
 
         NpcDecision ParseDecision(string json)
@@ -414,7 +453,7 @@ namespace Improv.Npc
             return new NpcDecision { look_at = "", say = json };
         }
 
-        void ActOn(NpcDecision decision)
+        void ActOn(NpcDecision decision, bool heardSpeech)
         {
             // 집중도 (T-5). LLM이 이 캐릭터가 지금 일을 얼마나 신경 쓰는지 골랐다. 다음 판단의 노력이 여기에 따라 달라진다.
             if (attention != null && decision.attention >= 0f)
@@ -440,6 +479,15 @@ namespace Improv.Npc
                 Debug.Log($"[NPC {speaker.DisplayName}] 기억함: {decision.remember}", this);
             }
 
+            // 마음 (I-12). 값은 LLM이 골랐고, 코드는 기록하고 흐려지게 하고 상쇄만 한다.
+            // 혼자 생각한 차례(속생각만)에는 마음을 바꾸지 않는다. I-12 시험에서 사람을 다시 볼 때마다
+            // 묵은 감정을 말만 바꿔 새 일처럼 적어("빚을 갚아야 한다 -20") 호감이 끝없이 쌓였다.
+            if (decision.relation != null && relations != null)
+            {
+                if (heardSpeech) foreach (var change in decision.relation) ApplyRelation(change);
+                else if (decision.relation.Length > 0) Debug.Log($"[NPC {speaker.DisplayName}] 혼자 생각한 차례라 마음 변화를 버림 ({decision.relation.Length}개)", this);
+            }
+
             // 행동 (T-6). 무엇을 할지는 LLM이 골랐고, 몸으로 해내는 것은 NpcActions가 한다.
             if (actions != null && !string.IsNullOrWhiteSpace(decision.action) && decision.action.Trim() != NpcActions.None)
                 actions.Execute(decision.action, decision.target);
@@ -455,6 +503,30 @@ namespace Improv.Npc
             recentLines.Add(line);
             if (recentLines.Count > RecentLineCount) recentLines.RemoveAt(0);
             speaker.Say(line, chainDepth: replyChainDepth);
+        }
+
+        void ApplyRelation(RelationChange change)
+        {
+            if (change == null || string.IsNullOrWhiteSpace(change.who) || change.value == 0) return;
+            string who = change.who.Trim();
+            int targetId;
+            if (who == "나" || who == "이제까지의 나" || who == speaker.DisplayName) targetId = relations.selfId;
+            else
+            {
+                // LLM은 이름만 안다(P-3). 지금 이름으로 찾고, 찾은 뒤로는 id로 적는다.
+                var c = CharacterIdentity.All.Find(x => x.DisplayName == who);
+                if (c == null) { Debug.Log($"[NPC {speaker.DisplayName}] 모르는 사람에 대한 마음: {who}", this); return; }
+                targetId = c.Id;
+            }
+            bool affection = change.kind != null && change.kind.Contains("애정");
+            var r = relations.Get(targetId);
+            int before = affection ? r.Affection(Time.time) : r.Affinity(Time.time);
+            var mod = relations.Add(targetId, affection, change.why, change.value, change.cancels, Time.time);
+            if (mod == null) return;
+            int after = affection ? r.Affection(Time.time) : r.Affinity(Time.time);
+            string lasting = mod.lasting ? ", 오래 남음" : "";
+            string cancel = mod.cancels != null ? $", '{mod.cancels.why}'와(과) 상쇄" : "";
+            Debug.Log($"[NPC {speaker.DisplayName}] 마음: {who} {(affection ? "애정" : "호감")} {before} → {after} ({mod.why} {change.value:+0;-0}{lasting}{cancel})", this);
         }
 
         string Clean(string text)

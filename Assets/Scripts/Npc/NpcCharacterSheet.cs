@@ -30,5 +30,20 @@ namespace Improv.Npc
 
         [Header("아는 사람과의 과거 (I-11). 이 캐릭터가 기억하는 판본이다. 진실과 다를 수 있다")]
         [TextArea(2, 6)] public List<string> pasts = new();
+
+        [Header("묵은 감정 (I-12, R-027). 게임 전부터 품은 호감 0~100. 50은 보통")]
+        [Tooltip("이제까지의 나(자기 자신)에 대한 호감. 스스로를 남처럼 본다")]
+        [Range(0, 100)] public int selfFeeling = 50;
+        public string selfWhy = "";
+        [Tooltip("아는 사람에 대한 묵은 감정. 이름은 판이 시작할 때 한 번 id로 바꾼다 (F-17)")]
+        public List<OldFeeling> oldFeelings = new();
+    }
+
+    [System.Serializable]
+    public class OldFeeling
+    {
+        public string name;
+        [Range(0, 100)] public int value = 50;
+        public string why;
     }
 }

@@ -11,7 +11,7 @@ namespace Improv.Npc
     {
         public static string BuildSystem(NpcCharacterSheet sheet, string myName, string roomName, IReadOnlyList<string> visibleNames, IReadOnlyList<string> longTermNotes,
                                          float attention = 0.5f, string attentionLevel = "보통", IReadOnlyList<string> feelings = null,
-                                         string actionContext = null)
+                                         string actionContext = null, string relationText = null)
         {
             var sb = new StringBuilder();
             // 이름은 시트가 아니라 지금 이름을 쓴다. 개명하면 바뀐다 (F-17). 시트의 이름은 처음 이름일 뿐이다.
@@ -61,6 +61,14 @@ namespace Improv.Npc
                 sb.AppendLine("그 사람을 만나면 이 과거가 태도에 묻어난다. 누구에게 얼마나 말할지는 네 성격대로 정한다.");
                 sb.AppendLine();
             }
+            // I-12, R-027: 사람(과 자기 자신)에 대한 마음. 숫자로 넘긴다(사용자 2026-11-25: 숫자 비교가 비유보다 명확하다).
+            if (!string.IsNullOrEmpty(relationText))
+            {
+                sb.AppendLine("사람에 대한 네 마음 (0~100, 50이 보통. 호감 = 좋고 싫음. 애정 = 본능적으로 끌림, 그 사람의 면모를 알수록 찍힌다):");
+                sb.Append(relationText);
+                sb.AppendLine("이 마음이 말과 태도에 묻어난다. 묵은 감정은 쉽게 안 바뀌고, 뒤에 붙은 것은 방금까지 있었던 일이다.");
+                sb.AppendLine();
+            }
             // T-6: 할 수 있는 행동과, 행동에 쓸 수 있는 대상(인지한 것만, P-3).
             if (!string.IsNullOrEmpty(actionContext))
             {
@@ -89,10 +97,22 @@ namespace Improv.Npc
             // T-5: 집중도는 이 캐릭터가 지금 벌어진 일을 얼마나 신경 쓰는지다. 성격에 따라 LLM이 고른다.
             sb.AppendLine($"- 지금 너의 집중도는 {attention:0.0}({attentionLevel})이다. 방금 일어난 일을 네 성격으로 얼마나 신경 쓰는지 attention에 0~1로 적는다.");
             sb.AppendLine("  대수롭지 않으면 낮게, 마음에 걸리거나 의심스럽거나 네 이름이 불렸으면 높게. 무심한 성격은 웬만하면 낮고, 예민한 성격은 작은 일에도 높다.");
+            // I-12 답 b: 값은 LLM이 그 캐릭터로서 느낀 만큼 고른다. 코드는 기록, 흐려짐, 상쇄만 한다.
+            // I-12 첫 시험: 이미 적힌 묵은 감정을 까닭 그대로 다시 적어(+62) 호감이 100으로 치솟았다. 새 일만 적게 한다.
+            sb.AppendLine("- 방금 새로 일어난 일(들은 말, 본 일, 한 일) 때문에 누군가에 대한 마음이 달라졌을 때만 relation에 적는다. 대부분은 빈 목록 []이다.");
+            sb.AppendLine("  위 '사람에 대한 네 마음'에 이미 적힌 마음과 까닭은 다시 적지 않는다. why에는 방금 일어난 일을 적는다(예: 내 말을 비웃음, 사과를 건네줌).");
+            sb.AppendLine("  value는 네가 느낀 만큼 -50~50. 남이 보기엔 작은 일이라도 너에게 선을 넘은 일이면 크게(20 넘으면 오래 남는다). 작은 감정은 하루쯤 지나면 흐려진다.");
+            sb.AppendLine("  kind는 호감 또는 애정. 애정은 그 사람의 몰랐던 면모를 새로 알게 됐을 때만 적는다(끌리면 +, 정떨어지면 -).");
+            sb.AppendLine("  앞에 붙은 마음을 풀어 주는 일이면(말다툼 뒤 화해) cancels에 그 까닭을 그대로 적는다. 너 자신(이제까지의 나)에 대한 마음은 who에 나.");
+            // I-12 둘째 시험: 모욕당한 쪽이 relation을 아예 빼고, cancels에 엉뚱한 말을 적었다. 8b 모델은 보기 하나를 더 잘 따른다.
+            sb.AppendLine("  보기: 누가 내 물건을 몰래 가져갔다 → [{\"who\": \"그 사람 이름\", \"kind\": \"호감\", \"why\": \"내 물건을 몰래 가져감\", \"value\": -20, \"cancels\": \"\"}]");
+            sb.AppendLine("        나중에 그 사람이 돌려주며 사과했다 → [{\"who\": \"그 사람 이름\", \"kind\": \"호감\", \"why\": \"돌려주며 사과함\", \"value\": 10, \"cancels\": \"내 물건을 몰래 가져감\"}]");
+            sb.AppendLine("  너를 욕하거나 칭찬하거나 도운 사람이 있으면 그 사람에 대한 마음을 꼭 적는다. (속생각)만 있을 때는 relation을 비운다.");
             sb.AppendLine();
             // R-016b, R-016d: 행동과 기억도 LLM이 고른다. 코드가 강제하지 않는다.
             sb.AppendLine("반드시 아래 JSON 한 개로만 답한다:");
-            sb.AppendLine("{\"look_at\": \"돌아볼 사람 이름. 돌아보지 않으면 빈 문자열\", \"say\": \"할 말. 말하지 않으면 빈 문자열\", \"remember\": \"꼭 기억할 짧은 메모. 없으면 빈 문자열\", \"attention\": 0~1 숫자, \"action\": \"가기/줍기/내려놓기/먹기/자기/없음 중 하나\", \"target\": \"행동의 대상 이름. 없으면 빈 문자열\"}");
+            sb.AppendLine("{\"look_at\": \"돌아볼 사람 이름. 돌아보지 않으면 빈 문자열\", \"say\": \"할 말. 말하지 않으면 빈 문자열\", \"remember\": \"꼭 기억할 짧은 메모. 없으면 빈 문자열\", \"attention\": 0~1 숫자, \"action\": \"가기/줍기/내려놓기/먹기/자기/없음 중 하나\", \"target\": \"행동의 대상 이름. 없으면 빈 문자열\", \"relation\": []}");
+            sb.AppendLine("relation의 한 칸 모양: {\"who\": \"사람 이름 또는 나\", \"kind\": \"호감 또는 애정\", \"why\": \"방금 일어난 일\", \"value\": 숫자, \"cancels\": \"풀어 주는 앞 까닭 또는 빈 문자열\"}");
             return sb.ToString();
         }
     }

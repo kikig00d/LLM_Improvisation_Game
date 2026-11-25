@@ -59,6 +59,7 @@ namespace Improv.Npc.Generation
         public List<string> people = new();      // 두 당사자 말고 나오는 사람. "지호 = 내 아들, 그때 17살"
         public List<PastEvent> events = new();   // 1인칭 기억. 자기는 "나"
         public string feeling;                   // 지금 상대에게 품은 마음
+        public int affinity = -1;                // 그 마음의 숫자, 묵은 감정 0~100 (I-12). -1이면 LLM이 안 줌
     }
 
     /// <summary>
