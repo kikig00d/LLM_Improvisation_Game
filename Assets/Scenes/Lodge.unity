@@ -6792,6 +6792,7 @@ MonoBehaviour:
   seed: 0
   reasoningEffort: low
   maxTokens: 3000
+  timeoutSeconds: 150
   minAgeAtPast: 10
 --- !u!4 &669132452
 Transform:

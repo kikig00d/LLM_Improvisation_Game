@@ -83,7 +83,7 @@ namespace Improv.Llm
                 request.uploadHandler = new UploadHandlerRaw(Encoding.UTF8.GetBytes(requestJson));
                 request.downloadHandler = new DownloadHandlerBuffer();
                 request.SetRequestHeader("Content-Type", "application/json");
-                request.timeout = timeoutSeconds;
+                request.timeout = options != null && options.TimeoutSeconds > 0 ? options.TimeoutSeconds : timeoutSeconds;
 
                 // 게임이 끝나거나 오브젝트가 사라지면 요청도 끊는다. 안 그러면 Play를 멈춘 뒤에도 기다린다.
                 using (cancel.Register(request.Abort))

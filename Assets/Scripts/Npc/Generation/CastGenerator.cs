@@ -36,6 +36,8 @@ namespace Improv.Npc.Generation
         [Tooltip("과거를 쓸 때 LLM의 생각 단계. none이면 빠르지만 글이 엉성하고, low면 느리지만 공들인다")]
         [SerializeField] string reasoningEffort = "low";   // 시험: none은 약 20초지만 주어가 꼬이고 조건을 어겼다. low는 약 47초(2건)로 성격대로 갈린 판본을 썼다
         [SerializeField] int maxTokens = 3000;   // 생각을 켜면 생각 글자도 여기에 들어가서 넉넉해야 한다
+        // 규격 줄(JSON 목록)로 바꾼 뒤 답이 길어져 대화용 기본값 60초를 넘겼다. 판 시작 때 한 번뿐이라 길게 준다.
+        [SerializeField] int timeoutSeconds = 150;
 
         // =====================================================================
         // #2. 상태
@@ -107,7 +109,7 @@ namespace Improv.Npc.Generation
                 for (int i = 0; i < links.Count; i++)
                 {
                     Status = $"사람들의 과거를 쓰는 중... ({i + 1}/{links.Count})";
-                    var options = new LlmRequestOptions { ReasoningEffort = reasoningEffort, MaxTokens = maxTokens, Seed = UsedSeed + i };
+                    var options = new LlmRequestOptions { ReasoningEffort = reasoningEffort, MaxTokens = maxTokens, Seed = UsedSeed + i, TimeoutSeconds = timeoutSeconds };
                     var link = links[i];
                     pasts.Add(await PastWriter.WriteAsync(client, cast[link.a], cast[link.b], link.kind, link.heavy, link.yearsAgo, options, destroyCancellationToken));
                 }
@@ -250,9 +252,8 @@ namespace Improv.Npc.Generation
             {
                 var mine = past.VersionOf(m);
                 if (mine == null) continue;
-                var other = past.Other(m);
-                string feeling = string.IsNullOrWhiteSpace(mine.feeling) ? "" : $" 지금 {other.name}에게 드는 마음: {mine.feeling}";
-                sheet.pasts.Add($"{other.name}와(과)의 일({past.truth.when}): {mine.memory}{feeling}");
+                // 규격 줄로 찍는다 (PastFormat). 긴 서술보다 주어와 사실이 덜 흔들린다 (사용자 결정 2026-11-25).
+                sheet.pasts.Add(PastFormat.Memory(past.Other(m).name, past.heavy, mine));
             }
             return sheet;
         }
@@ -289,9 +290,9 @@ namespace Improv.Npc.Generation
             foreach (var p in pasts)
             {
                 sb.AppendLine($"* {p.a.name} - {p.b.name}: {p.kind}{(p.heavy ? " (짙음)" : "")}{(p.fromLlm ? "" : " [대체 글]")}");
-                sb.AppendLine($"  진실: {p.truth}");
-                sb.AppendLine($"  {p.a.name}의 기억: {p.versionA.memory} / 마음: {p.versionA.feeling}");
-                sb.AppendLine($"  {p.b.name}의 기억: {p.versionB.memory} / 마음: {p.versionB.feeling}");
+                sb.AppendLine($"  진실: {PastFormat.Truth(p)}");
+                sb.AppendLine($"  {p.a.name}의 기억: {PastFormat.Memory(p.b.name, p.heavy, p.versionA)}");
+                sb.AppendLine($"  {p.b.name}의 기억: {PastFormat.Memory(p.a.name, p.heavy, p.versionB)}");
             }
             Debug.Log(sb.ToString(), this);
         }
@@ -353,7 +354,7 @@ namespace Improv.Npc.Generation
                 UnityEditor.AssetDatabase.CreateAsset(copy, $"{folder}/{s.displayName}.asset");
                 saved.sheets.Add(copy);
             }
-            foreach (var p in pasts) saved.truths.Add($"{p.a.name} - {p.b.name} ({p.kind}{(p.heavy ? ", 짙음" : "")}). {p.truth}");
+            foreach (var p in pasts) saved.truths.Add(PastFormat.Truth(p));
             UnityEditor.AssetDatabase.CreateAsset(saved, $"{folder}/CastPreset_{UsedSeed}.asset");
             UnityEditor.AssetDatabase.SaveAssets();
             Debug.Log($"[캐스트] 이 판을 {folder}에 프리셋으로 저장했습니다. CastGenerator의 preset 칸에 넣으면 다시 쓸 수 있습니다.", this);

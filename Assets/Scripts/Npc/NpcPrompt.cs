@@ -53,8 +53,10 @@ namespace Improv.Npc
             // T-8, I-11: 아는 사람과의 과거. 이 캐릭터의 기억(판본)이라 진실과 조금 다를 수 있지만, 본인에게는 이것이 사실이다.
             if (sheet.pasts != null && sheet.pasts.Count > 0)
             {
-                sb.AppendLine("네가 아는 사람과의 과거 (네 기억):");
-                foreach (string past in sheet.pasts) sb.AppendLine($"- {past}");
+                // 사용자 결정(2026-11-25): 긴 서술 대신 규격 줄(육하원칙 칸)로 넘긴다. 형식 설명을 한 번 붙인다.
+                sb.AppendLine($"네가 아는 사람과의 과거 (네 기억). {Generation.PastFormat.Legend}");
+                foreach (string past in sheet.pasts)
+                    sb.AppendLine(past.TrimStart().StartsWith("[") ? past.TrimEnd() : $"- {past}");   // 옛 서술형 시트도 읽히게
                 // 털어놓을지, 숨길지, 티를 낼지는 LLM이 성격대로 고른다 (R-016b). 코드는 정하지 않는다.
                 sb.AppendLine("그 사람을 만나면 이 과거가 태도에 묻어난다. 누구에게 얼마나 말할지는 네 성격대로 정한다.");
                 sb.AppendLine();
