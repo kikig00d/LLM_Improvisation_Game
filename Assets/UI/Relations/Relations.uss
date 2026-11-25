@@ -1,0 +1,81 @@
+/* 관계도 창 (T-9). 웹의 CSS와 거의 같은 문법이다. */
+
+.relations-overlay {
+    -unity-font-definition: url("project://database/Assets/Fonts/NotoSansKR/NotoSansKR-Regular.otf");
+    position: absolute;
+    left: 0; top: 0; right: 0; bottom: 0;
+    background-color: rgba(0, 0, 0, 0.55);
+    align-items: center;
+    justify-content: center;
+    display: none;              /* 처음에는 숨김. C#이 연다 */
+}
+
+.relations-window {
+    width: 82%;
+    height: 82%;
+    padding: 14px 18px;
+    background-color: rgb(16, 20, 30);
+    border-radius: 12px;
+    border-width: 1px;
+    border-color: rgba(255, 255, 255, 0.15);
+}
+
+.relations-header { flex-direction: row; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+.relations-title { color: rgb(235, 238, 245); font-size: 28px; -unity-font-style: bold; }
+.dev-button { font-size: 16px; color: rgb(255, 190, 90); background-color: rgba(255, 165, 30, 0.12); border-color: rgba(255, 165, 30, 0.5); }
+
+.relations-body { flex-grow: 1; flex-direction: row; }
+.graph-area {
+    flex-grow: 1;
+    background-color: rgba(255, 255, 255, 0.03);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.editor { width: 300px; margin-left: 14px; }
+.pair-label { color: rgb(235, 238, 245); font-size: 22px; -unity-font-style: bold; margin-bottom: 10px; white-space: normal; }
+.editor-caption { color: rgb(150, 156, 170); font-size: 15px; margin-top: 8px; margin-bottom: 4px; }
+.mark-row { flex-direction: row; flex-wrap: wrap; }
+.mark-button {
+    font-size: 17px;
+    margin: 2px;
+    padding: 4px 10px;
+    color: rgb(225, 228, 235);
+    background-color: rgba(255, 255, 255, 0.06);
+    border-width: 0 0 3px 0;
+}
+.mark-button--on { background-color: rgba(255, 255, 255, 0.28); -unity-font-style: bold; color: rgb(255, 255, 255); }
+.memo { font-size: 18px; min-height: 90px; }
+.memo > .unity-text-field__input { white-space: normal; -unity-text-align: upper-left; background-color: rgba(255, 255, 255, 0.92); color: rgb(20, 20, 26); }
+.editor-buttons { flex-direction: row; margin-top: 8px; }
+.small-button { font-size: 15px; }
+
+.relations-hint { color: rgb(150, 156, 170); font-size: 16px; margin-top: 8px; }
+
+/* 사람 칸 (코드가 left/top을 넣는다). 지름 84 = RelationGraphElement.nodeRadius 42의 두 배 */
+.node {
+    position: absolute;
+    width: 84px; height: 84px;
+    border-radius: 42px;
+    background-color: rgb(46, 54, 74);
+    border-width: 2px;
+    border-color: rgba(255, 255, 255, 0.25);
+    align-items: center;
+    justify-content: center;
+}
+.node > Label { color: rgb(235, 238, 245); font-size: 18px; -unity-text-align: middle-center; }
+.node--self { background-color: rgb(40, 70, 100); }
+.node--picked { border-color: rgb(255, 225, 120); border-width: 4px; }
+.node-dev { color: rgb(255, 190, 90); font-size: 13px; }
+
+/* 화살표 위 글자. 기준점을 가운데로 옮겨 C#에서 가운데 좌표만 넣으면 되게 한다 */
+.arrow-label {
+    position: absolute;
+    translate: -50% -50%;
+    padding: 1px 6px;
+    font-size: 15px;
+    color: rgb(235, 238, 245);
+    background-color: rgba(16, 20, 30, 0.85);
+    border-radius: 6px;
+}
+.arrow-label--dev { color: rgb(255, 190, 90); font-size: 13px; }
