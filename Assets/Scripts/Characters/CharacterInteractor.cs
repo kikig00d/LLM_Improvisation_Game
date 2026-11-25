@@ -92,6 +92,15 @@ namespace Improv.Characters
             return InteractionResult.Done;
         }
 
+        /// <summary>들고 있는 것을 써 버린다(먹기 등). 손이 비고 오브젝트는 사라진다. CharacterVitals가 부른다.</summary>
+        public void ConsumeHeld()
+        {
+            if (Held == null) return;
+            var item = Held;
+            Held = null;
+            Destroy(item.gameObject);   // 사라질 때 Carryable.OnDestroy가 트윈도 정리한다
+        }
+
         // 들고 있는 것을 클릭한 위치에 내려놓는다. 높이는 지금 서 있는 층의 바닥으로 맞춘다. (R-007)
         public InteractionResult TryDropAt(Vector2 clickPoint)
         {

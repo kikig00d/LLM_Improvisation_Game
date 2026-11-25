@@ -48,6 +48,8 @@ namespace Improv.Npc
         CharacterAnimator characterAnimator;   // 없어도 된다. 있으면 LLM이 고를 때 돌아볼 수 있다
         Improv.Characters.Sight.Vision vision;  // 없어도 된다. 있으면 지금 보이는 사람을 프롬프트에 넣는다 (P-3)
         NpcAttention attention;                 // 없어도 된다. 있으면 집중도에 따라 생각하는 노력을 바꾼다 (T-5)
+        CharacterVitals vitals;                 // 없어도 된다. 있으면 몸 상태를 느낌으로 프롬프트에 넣고, 죽으면 멈춘다 (R-020)
+        readonly List<string> feelings = new();
         readonly List<Improv.Characters.Sight.SightTarget> seenBuffer = new();
         ILlmClient client;
 
@@ -106,6 +108,7 @@ namespace Improv.Npc
             characterAnimator = GetComponent<CharacterAnimator>();
             vision = GetComponent<Improv.Characters.Sight.Vision>();
             attention = GetComponent<NpcAttention>();
+            vitals = GetComponent<CharacterVitals>();
 
             if (sheet == null) { Debug.LogError($"[NpcDialogueBrain] '{name}'의 캐릭터 시트가 비어 있습니다.", this); enabled = false; return; }
             if (llm == null) { Debug.LogError($"[NpcDialogueBrain] '{name}'의 LLM 설정이 비어 있습니다.", this); enabled = false; return; }
@@ -115,8 +118,25 @@ namespace Improv.Npc
             if (attention != null) attention.Init(sheet.baselineAttention);
         }
 
-        void OnEnable() => hearing.Heard += OnHeard;
-        void OnDisable() => hearing.Heard -= OnHeard;
+        void OnEnable()
+        {
+            hearing.Heard += OnHeard;
+            if (vitals != null) vitals.Died += OnDied;
+        }
+
+        void OnDisable()
+        {
+            hearing.Heard -= OnHeard;
+            if (vitals != null) vitals.Died -= OnDied;
+        }
+
+        // 죽으면 두뇌도 멈춘다 (R-022). 진행 중인 LLM 답은 destroyCancellationToken이 아니라 enabled로 막는다.
+        void OnDied()
+        {
+            pending.Clear();
+            speaker.ShowThinking = false;
+            enabled = false;
+        }
 
         // =====================================================================
         // #4. 듣기와 답하기
@@ -168,7 +188,8 @@ namespace Improv.Npc
                         ? roomPresence.CurrentRoom.DisplayName : "산장 안";
                     float attentionValue = attention != null ? attention.Value : 0.5f;
                     string attentionLevel = attention != null ? attention.LevelName : "보통";
-                    var messages = new List<ChatMessage> { ChatMessage.System(NpcPrompt.BuildSystem(sheet, speaker.DisplayName, room, VisibleNames(), longTerm, attentionValue, attentionLevel)) };
+                    if (vitals != null) vitals.DescribeFeelings(feelings); else feelings.Clear();
+                    var messages = new List<ChatMessage> { ChatMessage.System(NpcPrompt.BuildSystem(sheet, speaker.DisplayName, room, VisibleNames(), longTerm, attentionValue, attentionLevel, feelings)) };
                     // T-5: 집중도가 낮으면 최근 몇 줄만 떠올린다. 들은 말 자체는 단기 기억에 그대로 있다(흐려지지 않음).
                     int lines = attention != null ? attention.HistoryLines(shortTerm.Count) : shortTerm.Count;
                     for (int i = shortTerm.Count - lines; i < shortTerm.Count; i++) messages.Add(shortTerm[i].message);
@@ -195,6 +216,8 @@ namespace Improv.Npc
                         speaker.Say("...", chainDepth: replyChainDepth);
                         continue;
                     }
+
+                    if (!enabled) return;   // 답을 기다리는 사이 죽었다 (R-022)
 
                     // 모델이 쓴 JSON을 그대로 기억에 넣는다. 다음 답도 같은 형식을 따라 하게 된다.
                     shortTerm.Add((ChatMessage.Assistant(reply.Text), Time.time));

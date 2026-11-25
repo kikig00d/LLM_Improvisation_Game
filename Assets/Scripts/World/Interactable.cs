@@ -39,5 +39,6 @@ namespace Improv.World
         NoSpace,        // 내려놓을 자리가 다른 것과 겹친다 (E-001)
         WrongFloor,     // 다른 층을 클릭했다
         Busy,           // 연출(트윈)이 끝나지 않았다
+        NotEdible,      // 들고 있는 것이 음식이 아니다 (R-020)
     }
 }

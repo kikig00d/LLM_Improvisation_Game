@@ -19,7 +19,14 @@
 - F-17 진행 중: 브랜치 `fix/f17-names`. 캐릭터 id(`Characters/CharacterIdentity`: 플레이어 0, 한도윤 1, 서미라 2, 박건우 3)와 바꿀 수 있는 이름(`Rename`). `SpeechEvent.SpeakerName`에 말한 순간의 이름. 단어 사전은 `CharacterIdentity.RosterChanged`마다 지금 이름들로 이름 단어를 다시 채운다(이름이 먼저 나옴, 동명이인은 한 단어). NPC 프롬프트의 "너는 ~이다"도 지금 이름. 검증(코드): 박/박거/박건/ㅂㄱ → 박건우, 3번을 김건우로 개명하자 사전·말소리·프롬프트가 김건우, 2번을 한도윤으로 바꾸자 이름 단어 하나로 합쳐짐. "박거" 뒤 입력 막힘은 재현 못 함, `[대화창 입력]` 로그(DialogueWindow.logTyping) 켜 둠. main에 합쳐졌다 (2026-11-25 사용자 확인).
 - F-18(백스페이스)까지 main에 합쳐졌다 (2026-11-25 사용자 확인). 백스페이스는 `DialogueWindow.DeleteBackward`가 직접 처리(조합 중이면 입력기에 맡김). 입력 로그 `logTyping`은 껐다(입력 문제를 찾을 때 켠다).
 - T-5 첫 단계(집중도)까지 main에 합쳐졌다 (2026-11-25 사용자 확인).
-- 다음: 추천 순서대로 T-3(M7 상태바: 건강·배고픔·스테미너·체온·스트레스, Q-5 감소 속도 먼저 묻기), 또는 T-5 나머지 상태(NPC 이동 AI와 함께).
+- M7(T-3 상태바) 진행 중: 브랜치 `feature/m7-vitals`. 사용자 확인 대기.
+
+## M7 진행 기록 (2026-11-25)
+
+- 결정 (GDD 1.14): 추천 값으로 시작(O-005 [가정]), 체온·스트레스는 고정, 간단한 음식 넣기, NPC도 같은 상태바를 갖고 느낌으로 LLM에 전달.
+- 구조: `Characters/CharacterVitals`(5개 바, 게임 시간 기준, 걷기는 `CharacterMotor.Velocity`, 들기는 `CharacterInteractor.Held`, 자기는 `CharacterSleep`; 건강 0 → `Died`, 몸을 눕혀 바닥에 붙이고 눈·귀를 끈다; `DescribeFeelings`). `World/Food`(Carryable과 함께, 영양 35). `CharacterInteractor.ConsumeHeld`. `Player/PlayerUseInput`(F = `Player/Use`, 먹기). `Player/PlayerDeathHandler`(죽으면 플레이어 입력 끄기). `UI/VitalsView`(Clock.uxml의 왼쪽 아래 바 5개와 사망 화면). NPC 두뇌는 죽으면 멈추고, 프롬프트에 "지금 몸 상태: ..."를 넣는다. 거실에 사과 3개(x=1.0, 1.45, -5.4).
+- 시뮬레이션 검증(코드로): 걸으면 스테미너 초당 약 1 감소, 서 있으면 회복, 사과를 들고 걸으면 2배로 줄고 들고 서 있으면 안 참 / 사과 줍기 → F(코드) → 배고픔 78 → 100, 사과 사라짐 / 배고픔 0이면 건강 감소 / 건강 0 → 사망 화면, 입력 꺼짐, 쓰러진 몸이 바닥에 붙음(화면 캡처) / 서미라 배고픔 20·스테미너 8 → 프롬프트에 "배가 고프다, 너무 지쳐 쓰러질 것 같다".
+- 남은 것: NPC는 스스로 못 먹는다(F-19). 사과 그림이 작다(F-20). R-021(질병·보너스)은 아직 [미정].
 
 ## T-5 진행 기록 (2026-11-25)
 

@@ -57,6 +57,8 @@ namespace Improv.World
         public bool IsPaused => Speed == 0f;
         public bool IsPlayerSleeping => playerSleeping;
         public float WakeHour => wakeHour;
+        /// <summary>1배속에서 게임 하루가 지나는 시간 (Time.deltaTime 단위의 초). 상태바가 "하루에 얼마"를 초당 값으로 바꿀 때 쓴다.</summary>
+        public float DayLengthSeconds => dayLengthSeconds;
         public int Step => step;
         public int MaxPlayableStep => maxPlayableStep;
         public float StepSpeed(int index) => speedSteps[index];

@@ -10,7 +10,7 @@ namespace Improv.Npc
     public static class NpcPrompt
     {
         public static string BuildSystem(NpcCharacterSheet sheet, string myName, string roomName, IReadOnlyList<string> visibleNames, IReadOnlyList<string> longTermNotes,
-                                         float attention = 0.5f, string attentionLevel = "보통")
+                                         float attention = 0.5f, string attentionLevel = "보통", IReadOnlyList<string> feelings = null)
         {
             var sb = new StringBuilder();
             // 이름은 시트가 아니라 지금 이름을 쓴다. 개명하면 바뀐다 (F-17). 시트의 이름은 처음 이름일 뿐이다.
@@ -20,6 +20,9 @@ namespace Improv.Npc
             sb.AppendLine(visibleNames.Count > 0
                 ? $"지금 눈에 보이는 사람: {string.Join(", ", visibleNames)}. 그 밖의 사람은 보이지 않고 목소리만 들린다."
                 : "지금 눈에 보이는 사람은 없다. 들리는 목소리는 보이지 않는 곳에서 온다.");
+            // R-020, P-3: 몸 상태는 숫자가 아니라 느낌으로. 괜찮으면 아무 말도 넣지 않는다.
+            if (feelings != null && feelings.Count > 0)
+                sb.AppendLine($"지금 몸 상태: {string.Join(", ", feelings)}. 이 느낌이 말과 기분에 자연스럽게 묻어난다.");
             sb.AppendLine();
 
             // R-016d: 장기 기억. NPC가 집중해서 기억하기로 고른 것만 여기에 남는다.

@@ -13,6 +13,15 @@
     <!-- 멈췄을 때 화면 위쪽 가운데에 뜨는 표시 -->
     <ui:Label name="pause-banner" class="pause-banner" text="일시정지 · P로 풀기" picking-mode="Ignore" />
 
+    <!-- 왼쪽 아래 상태바 (R-020). 줄은 VitalsView가 코드로 만든다. -->
+    <ui:VisualElement name="vitals-panel" class="vitals ui-solid" />
+
+    <!-- 죽으면 화면 가운데에 뜬다 (R-022) -->
+    <ui:VisualElement name="death-overlay" class="death-overlay" picking-mode="Ignore">
+        <ui:Label class="death-text" text="사망했습니다" picking-mode="Ignore" />
+        <ui:Label class="death-sub" text="패배 · Play를 다시 시작하세요" picking-mode="Ignore" />
+    </ui:VisualElement>
+
     <!-- 오른쪽 위 시계와 속도 버튼 (크루세이더 킹즈처럼) -->
     <ui:VisualElement name="clock-panel" class="clock ui-solid">
         <ui:Label name="clock-time" class="clock-time" />
