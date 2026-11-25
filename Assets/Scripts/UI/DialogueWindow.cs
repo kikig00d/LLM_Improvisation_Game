@@ -26,8 +26,8 @@ namespace Improv.UI
         [SerializeField] float historyLifetime = 60f;
         [Tooltip("사라지기 전에 흐려지는 시간 (초)")]
         [SerializeField] float historyFadeDuration = 8f;
-        [Tooltip("F-17 원인 찾기용: 입력칸 글자와 한글 조합이 바뀔 때마다 콘솔에 남긴다. 원인을 찾으면 끈다.")]
-        [SerializeField] bool logTyping = true;
+        [Tooltip("입력 문제를 찾을 때만 켠다: 입력칸 글자·한글 조합·키가 바뀔 때마다 콘솔에 남긴다 (F-17·F-18 때 썼다).")]
+        [SerializeField] bool logTyping = false;
         [SerializeField] string defaultHint = "글자를 치면 후보가 나와요 · 스페이스/탭: 고르기 · ↑↓: 후보 바꾸기 · 엔터: 보내기 · Esc: 닫기";
 
         // =====================================================================
