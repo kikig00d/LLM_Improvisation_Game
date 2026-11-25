@@ -2630,6 +2630,9 @@ MonoBehaviour:
   replyDelayRange: {x: 0.3, y: 1.5}
   maxNpcChain: 6
   idleThinkSeconds: 50
+  firstThinkDelay: {x: 1, y: 6}
+  noticeAfterUnseen: 120
+  minSelfThinkInterval: 8
 --- !u!114 &285436538
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -6784,6 +6787,8 @@ MonoBehaviour:
   - {fileID: 1931264161}
   - {fileID: 1235027954}
   - {fileID: 285436537}
+  usePreset: 1
+  preset: {fileID: 11400000, guid: 31476121a34ecb340badc0c3dfa12871, type: 2}
   seed: 0
   reasoningEffort: low
   maxTokens: 3000
@@ -12040,6 +12045,9 @@ MonoBehaviour:
   replyDelayRange: {x: 0.3, y: 1.5}
   maxNpcChain: 6
   idleThinkSeconds: 50
+  firstThinkDelay: {x: 1, y: 6}
+  noticeAfterUnseen: 120
+  minSelfThinkInterval: 8
 --- !u!114 &1235027955
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -19289,6 +19297,9 @@ MonoBehaviour:
   replyDelayRange: {x: 0.3, y: 1.5}
   maxNpcChain: 6
   idleThinkSeconds: 50
+  firstThinkDelay: {x: 1, y: 6}
+  noticeAfterUnseen: 120
+  minSelfThinkInterval: 8
 --- !u!114 &1931264162
 MonoBehaviour:
   m_ObjectHideFlags: 0

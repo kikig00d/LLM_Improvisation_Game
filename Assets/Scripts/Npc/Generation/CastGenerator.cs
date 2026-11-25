@@ -15,6 +15,7 @@ namespace Improv.Npc.Generation
     /// 3. 겹치는 과거만 LLM이 쓴다: 진실 먼저, 그다음 각자의 판본 (PastWriter).
     /// 4. 시트로 묶어 각 NPC 두뇌에 끼운다. 그동안 시간은 멈추고 두뇌는 꺼 둔다.
     /// 같은 씨드면 1~2가 같다. 3의 글은 LLM 씨드로 최대한 같게 하지만 완전히 같다는 보장은 없다.
+    /// "프리셋 쓰기"를 켜면 1~4를 건너뛰고 미리 써 둔 판(CastPreset)을 바로 끼운다. 시험할 때 로딩을 없애려고.
     /// 이 컴포넌트를 끄면 NPC는 씬에 연결된 손으로 쓴 시트를 그대로 쓴다.
     /// </summary>
     [DefaultExecutionOrder(-50)]
@@ -27,6 +28,9 @@ namespace Improv.Npc.Generation
         [SerializeField] CharacterTables tables;
         [SerializeField] LlmSettings llm;
         [SerializeField] List<NpcDialogueBrain> npcs = new();
+        [Tooltip("켜면 생성하지 않고 이 프리셋을 그대로 쓴다 (로딩 없음). 끄면 매 판 새로 만든다")]
+        [SerializeField] bool usePreset = true;
+        [SerializeField] CastPreset preset;
         [Tooltip("0이면 매 판 새 씨드. 숫자를 넣으면 같은 사람들이 나온다 (Console에 쓴 씨드가 찍힌다)")]
         [SerializeField] int seed = 0;
         [Tooltip("과거를 쓸 때 LLM의 생각 단계. none이면 빠르지만 글이 엉성하고, low면 느리지만 공들인다")]
@@ -44,6 +48,7 @@ namespace Improv.Npc.Generation
         public IReadOnlyList<CastMember> Cast => cast;
         public IReadOnlyList<SharedPast> Pasts => pasts;
         public IReadOnlyList<NpcCharacterSheet> Sheets => sheets;
+        bool UsingPreset => usePreset && preset != null && preset.sheets.Count > 0;
 
         readonly List<CastMember> cast = new();
         readonly List<SharedPast> pasts = new();
@@ -71,6 +76,7 @@ namespace Improv.Npc.Generation
             if (tables == null) { Debug.LogError("[CastGenerator] tables(CharacterTables)가 비어 있습니다.", this); enabled = false; return; }
             if (llm == null) { Debug.LogError("[CastGenerator] llm(LlmSettings)이 비어 있습니다.", this); enabled = false; return; }
             npcs.RemoveAll(n => n == null);
+            if (UsingPreset) return;   // 프리셋은 기다릴 것이 없어 두뇌를 끄지 않는다
             // 시트가 나오기 전에 NPC가 말을 듣고 답하지 않게 두뇌를 꺼 둔다.
             foreach (var npc in npcs) npc.enabled = false;
             IsGenerating = true;
@@ -86,6 +92,7 @@ namespace Improv.Npc.Generation
         async Awaitable Start()
         {
             if (!enabled) return;
+            if (UsingPreset) { ApplyPreset(); return; }
             int resumeStep = PauseClock();
             try
             {
@@ -250,6 +257,26 @@ namespace Improv.Npc.Generation
             return sheet;
         }
 
+        // 미리 써 둔 판을 끼운다. 두뇌의 Start(첫 생각)보다 먼저 돈다 (DefaultExecutionOrder -50).
+        void ApplyPreset()
+        {
+            int count = Mathf.Min(npcs.Count, preset.sheets.Count);
+            if (preset.sheets.Count != npcs.Count)
+                Debug.LogWarning($"[캐스트] 프리셋의 시트 수({preset.sheets.Count})와 NPC 수({npcs.Count})가 다릅니다. 앞에서부터 {count}명만 끼웁니다.", this);
+            var sb = new StringBuilder();
+            sb.AppendLine($"[캐스트] 프리셋 '{preset.name}'을(를) 씁니다 (생성 안 함)");
+            for (int i = 0; i < count; i++)
+            {
+                var sheet = preset.sheets[i];
+                if (sheet == null) continue;
+                sheets.Add(sheet);
+                npcs[i].ApplySheet(sheet);
+                sb.AppendLine($"- {npcs[i].name} ← {sheet.displayName}: {sheet.publicProfile}");
+            }
+            foreach (string truth in preset.truths) sb.AppendLine($"* 진실: {truth}");
+            Debug.Log(sb.ToString(), this);
+        }
+
         void LogCast()
         {
             var sb = new StringBuilder($"[캐스트] 씨드 {UsedSeed}로 만든 사람들\n");
@@ -311,21 +338,25 @@ namespace Improv.Npc.Generation
         }
 
 #if UNITY_EDITOR
-        // Play 중 Inspector의 ⋮ 메뉴에서 고른다. 마음에 드는 판을 에셋으로 남겨 두고, 생성기를 끈 채 NPC에 끼워 다시 쓸 수 있다.
-        [ContextMenu("만든 시트를 에셋으로 저장")]
-        void SaveSheets()
+        // Play 중 Inspector의 ⋮ 메뉴에서 고른다. 마음에 드는 판을 프리셋으로 남겨 두고, preset 칸에 넣어 다시 쓸 수 있다.
+        [ContextMenu("만든 판을 프리셋으로 저장")]
+        void SavePreset()
         {
-            if (sheets.Count == 0) { Debug.LogWarning("[캐스트] 아직 만든 시트가 없습니다. Play 중 생성이 끝난 뒤 고르세요.", this); return; }
-            const string folder = "Assets/Data/Characters/Generated";
-            if (!UnityEditor.AssetDatabase.IsValidFolder(folder)) UnityEditor.AssetDatabase.CreateFolder("Assets/Data/Characters", "Generated");
+            if (sheets.Count == 0 || pasts.Count == 0) { Debug.LogWarning("[캐스트] 아직 만든 판이 없습니다. 프리셋을 끄고 Play한 뒤, 생성이 끝나면 고르세요.", this); return; }
+            const string parent = "Assets/Data/Characters";
+            string folder = $"{parent}/Cast_{UsedSeed}";
+            if (!UnityEditor.AssetDatabase.IsValidFolder(folder)) UnityEditor.AssetDatabase.CreateFolder(parent, $"Cast_{UsedSeed}");
+            var saved = ScriptableObject.CreateInstance<CastPreset>();
             foreach (var s in sheets)
             {
                 var copy = Instantiate(s);
-                string path = UnityEditor.AssetDatabase.GenerateUniqueAssetPath($"{folder}/{UsedSeed}_{s.displayName}.asset");
-                UnityEditor.AssetDatabase.CreateAsset(copy, path);
+                UnityEditor.AssetDatabase.CreateAsset(copy, $"{folder}/{s.displayName}.asset");
+                saved.sheets.Add(copy);
             }
+            foreach (var p in pasts) saved.truths.Add($"{p.a.name} - {p.b.name} ({p.kind}{(p.heavy ? ", 짙음" : "")}). {p.truth}");
+            UnityEditor.AssetDatabase.CreateAsset(saved, $"{folder}/CastPreset_{UsedSeed}.asset");
             UnityEditor.AssetDatabase.SaveAssets();
-            Debug.Log($"[캐스트] 시트 {sheets.Count}개를 {folder}에 저장했습니다.", this);
+            Debug.Log($"[캐스트] 이 판을 {folder}에 프리셋으로 저장했습니다. CastGenerator의 preset 칸에 넣으면 다시 쓸 수 있습니다.", this);
         }
 #endif
     }

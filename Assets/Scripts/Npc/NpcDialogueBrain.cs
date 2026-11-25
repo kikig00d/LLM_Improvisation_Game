@@ -241,7 +241,8 @@ namespace Improv.Npc
                 lastSeenAt[identity.Id] = Time.time;
                 if (fresh) noticed.Add(other.DisplayName);
             }
-            if (!silent && noticed.Count > 0) RequestThink($"{string.Join(", ", noticed)}이(가) 눈에 들어왔다");
+            // "~이(가) 눈에 들어왔다"는 LLM이 눈(雪)으로 읽고 "눈 들어왔어?"라고 답했다(T-8 프리셋 시험). 조사 없이 쓴다.
+            if (!silent && noticed.Count > 0) RequestThink($"새로 보이는 사람: {string.Join(", ", noticed)}");
         }
 
         /// <summary>혼자 생각할 까닭을 남긴다. 이미 생각 중이면 끝난 뒤 이어서 생각한다.</summary>
