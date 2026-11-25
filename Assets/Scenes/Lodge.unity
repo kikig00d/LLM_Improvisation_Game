@@ -2538,6 +2538,7 @@ GameObject:
   - component: {fileID: 285436535}
   - component: {fileID: 285436547}
   - component: {fileID: 285436548}
+  - component: {fileID: 285436549}
   m_Layer: 8
   m_Name: Npc_SeoMira
   m_TagString: Untagged
@@ -2817,6 +2818,27 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Improv.Characters.CharacterIdentity
   id: 2
   displayName: "\uC11C\uBBF8\uB77C"
+--- !u!114 &285436549
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 285436534}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: db58fb7c12d9677499fe2df23685a8d2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Improv.Npc.NpcAttention
+  lowBelow: 0.35
+  highFrom: 0.7
+  halfLifeSeconds: 60
+  nameCallLevel: 0.6
+  lowHistoryLines: 6
+  lowMaxTokens: 120
+  normalMaxTokens: 160
+  highMaxTokens: 2000
+  highReasoningEffort: low
 --- !u!1 &296775391
 GameObject:
   m_ObjectHideFlags: 0
@@ -11342,6 +11364,7 @@ GameObject:
   - component: {fileID: 1235027952}
   - component: {fileID: 1235027964}
   - component: {fileID: 1235027965}
+  - component: {fileID: 1235027966}
   m_Layer: 8
   m_Name: Npc_ParkGunwoo
   m_TagString: Untagged
@@ -11621,6 +11644,27 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Improv.Characters.CharacterIdentity
   id: 3
   displayName: "\uBC15\uAC74\uC6B0"
+--- !u!114 &1235027966
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1235027951}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: db58fb7c12d9677499fe2df23685a8d2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Improv.Npc.NpcAttention
+  lowBelow: 0.35
+  highFrom: 0.7
+  halfLifeSeconds: 60
+  nameCallLevel: 0.6
+  lowHistoryLines: 6
+  lowMaxTokens: 120
+  normalMaxTokens: 160
+  highMaxTokens: 2000
+  highReasoningEffort: low
 --- !u!1 &1246059759
 GameObject:
   m_ObjectHideFlags: 0
@@ -18345,6 +18389,7 @@ GameObject:
   - component: {fileID: 1931264171}
   - component: {fileID: 1931264173}
   - component: {fileID: 1931264174}
+  - component: {fileID: 1931264175}
   m_Layer: 8
   m_Name: Npc_HanDoyun
   m_TagString: Untagged
@@ -18624,6 +18669,27 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Improv.Characters.CharacterIdentity
   id: 1
   displayName: "\uD55C\uB3C4\uC724"
+--- !u!114 &1931264175
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1931264160}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: db58fb7c12d9677499fe2df23685a8d2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Improv.Npc.NpcAttention
+  lowBelow: 0.35
+  highFrom: 0.7
+  halfLifeSeconds: 60
+  nameCallLevel: 0.6
+  lowHistoryLines: 6
+  lowMaxTokens: 120
+  normalMaxTokens: 160
+  highMaxTokens: 2000
+  highReasoningEffort: low
 --- !u!1 &1934946514
 GameObject:
   m_ObjectHideFlags: 0

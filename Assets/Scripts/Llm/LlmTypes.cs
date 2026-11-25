@@ -51,4 +51,14 @@ namespace Improv.Llm
 
         public bool Ok => Status == LlmStatus.Ok;
     }
+
+    /// <summary>
+    /// 한 번의 요청에만 쓰는 설정 (T-5). 비어 있는 항목은 LlmSettings의 기본값을 쓴다.
+    /// NPC 집중도에 따라 "얼마나 공들여 생각할지"를 요청마다 바꿀 때 쓴다.
+    /// </summary>
+    public class LlmRequestOptions
+    {
+        public string ReasoningEffort;   // "none"이면 생각 끔, "low" 등이면 생각 켬. null이면 기본값
+        public int MaxTokens;            // 0이면 기본값. 생각을 켜면 생각 글자도 여기에 들어가서 넉넉해야 한다
+    }
 }

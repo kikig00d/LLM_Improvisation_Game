@@ -9,7 +9,8 @@ namespace Improv.Npc
     /// </summary>
     public static class NpcPrompt
     {
-        public static string BuildSystem(NpcCharacterSheet sheet, string myName, string roomName, IReadOnlyList<string> visibleNames, IReadOnlyList<string> longTermNotes)
+        public static string BuildSystem(NpcCharacterSheet sheet, string myName, string roomName, IReadOnlyList<string> visibleNames, IReadOnlyList<string> longTermNotes,
+                                         float attention = 0.5f, string attentionLevel = "보통")
         {
             var sb = new StringBuilder();
             // 이름은 시트가 아니라 지금 이름을 쓴다. 개명하면 바뀐다 (F-17). 시트의 이름은 처음 이름일 뿐이다.
@@ -54,10 +55,13 @@ namespace Improv.Npc
             sb.AppendLine("- 네가 앞에서 한 말이나 남이 방금 한 말을 그대로 되풀이하지 않는다. 할 말이 없으면 말하지 않는다.");
             sb.AppendLine("- 자신이 AI라고 말하지 않는다.");
             sb.AppendLine("- 들은 말은 시간이 지나면 잊는다. 나중에도 꼭 기억해야 할 것만 remember에 짧게 적는다. 대부분은 비워 둔다.");
+            // T-5: 집중도는 이 캐릭터가 지금 벌어진 일을 얼마나 신경 쓰는지다. 성격에 따라 LLM이 고른다.
+            sb.AppendLine($"- 지금 너의 집중도는 {attention:0.0}({attentionLevel})이다. 방금 일어난 일을 네 성격으로 얼마나 신경 쓰는지 attention에 0~1로 적는다.");
+            sb.AppendLine("  대수롭지 않으면 낮게, 마음에 걸리거나 의심스럽거나 네 이름이 불렸으면 높게. 무심한 성격은 웬만하면 낮고, 예민한 성격은 작은 일에도 높다.");
             sb.AppendLine();
             // R-016b, R-016d: 행동과 기억도 LLM이 고른다. 코드가 강제하지 않는다.
             sb.AppendLine("반드시 아래 JSON 한 개로만 답한다:");
-            sb.AppendLine("{\"look_at\": \"돌아볼 사람 이름. 돌아보지 않으면 빈 문자열\", \"say\": \"할 말. 말하지 않으면 빈 문자열\", \"remember\": \"꼭 기억할 짧은 메모. 없으면 빈 문자열\"}");
+            sb.AppendLine("{\"look_at\": \"돌아볼 사람 이름. 돌아보지 않으면 빈 문자열\", \"say\": \"할 말. 말하지 않으면 빈 문자열\", \"remember\": \"꼭 기억할 짧은 메모. 없으면 빈 문자열\", \"attention\": 0~1 숫자}");
             return sb.ToString();
         }
     }

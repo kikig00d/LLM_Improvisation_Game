@@ -67,10 +67,10 @@ namespace Improv.Llm
         // #3. 보내고 받기
         // =====================================================================
 
-        public async Awaitable<LlmReply> SendAsync(IReadOnlyList<ChatMessage> messages, CancellationToken cancel, bool jsonMode = false)
+        public async Awaitable<LlmReply> SendAsync(IReadOnlyList<ChatMessage> messages, CancellationToken cancel, bool jsonMode = false, LlmRequestOptions options = null)
         {
             string url = baseUrl + "/chat/completions";
-            string requestJson = BuildRequestJson(messages, jsonMode);
+            string requestJson = BuildRequestJson(messages, jsonMode, options);
 
             var reply = new LlmReply { Model = Model };
             var stopwatch = Stopwatch.StartNew();
@@ -121,21 +121,24 @@ namespace Improv.Llm
         // #4. 도우미 함수
         // =====================================================================
 
-        string BuildRequestJson(IReadOnlyList<ChatMessage> messages, bool jsonMode)
+        string BuildRequestJson(IReadOnlyList<ChatMessage> messages, bool jsonMode, LlmRequestOptions options)
         {
+            // 요청마다 바꾼 값이 있으면 그것을, 없으면 기본값을 쓴다 (T-5 집중도).
+            string effort = options?.ReasoningEffort ?? reasoningEffort;
+            int tokens = options != null && options.MaxTokens > 0 ? options.MaxTokens : maxTokens;
             var body = new ChatRequest
             {
                 model = Model,
                 messages = new List<ChatMessage>(messages).ToArray(),
                 stream = false,
                 temperature = temperature,
-                max_tokens = maxTokens
+                max_tokens = tokens
             };
             string json = JsonUtility.ToJson(body);
 
             // JsonUtility는 빈 값도 항상 써 버려서, 선택 항목은 필요할 때만 끝에 끼워 넣는다.
-            if (!string.IsNullOrEmpty(reasoningEffort))
-                json = json.Insert(json.Length - 1, $",\"reasoning_effort\":\"{reasoningEffort}\"");
+            if (!string.IsNullOrEmpty(effort))
+                json = json.Insert(json.Length - 1, $",\"reasoning_effort\":\"{effort}\"");
             // OpenAI 형식의 "JSON으로만 답하기" 옵션. 서버가 문법에 맞는 JSON만 나오게 막아 준다.
             if (jsonMode)
                 json = json.Insert(json.Length - 1, ",\"response_format\":{\"type\":\"json_object\"}");

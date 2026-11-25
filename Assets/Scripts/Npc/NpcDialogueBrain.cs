@@ -47,6 +47,7 @@ namespace Improv.Npc
         RoomPresence roomPresence;   // 없어도 된다. 있으면 지금 방 이름을 프롬프트에 넣는다
         CharacterAnimator characterAnimator;   // 없어도 된다. 있으면 LLM이 고를 때 돌아볼 수 있다
         Improv.Characters.Sight.Vision vision;  // 없어도 된다. 있으면 지금 보이는 사람을 프롬프트에 넣는다 (P-3)
+        NpcAttention attention;                 // 없어도 된다. 있으면 집중도에 따라 생각하는 노력을 바꾼다 (T-5)
         readonly List<Improv.Characters.Sight.SightTarget> seenBuffer = new();
         ILlmClient client;
 
@@ -104,12 +105,14 @@ namespace Improv.Npc
             roomPresence = GetComponent<RoomPresence>();
             characterAnimator = GetComponent<CharacterAnimator>();
             vision = GetComponent<Improv.Characters.Sight.Vision>();
+            attention = GetComponent<NpcAttention>();
 
             if (sheet == null) { Debug.LogError($"[NpcDialogueBrain] '{name}'의 캐릭터 시트가 비어 있습니다.", this); enabled = false; return; }
             if (llm == null) { Debug.LogError($"[NpcDialogueBrain] '{name}'의 LLM 설정이 비어 있습니다.", this); enabled = false; return; }
 
             speaker.SetDisplayName(sheet.displayName);   // 시트의 이름은 "처음 이름". 그 뒤로는 신원(CharacterIdentity)이 이름의 주인이다
             client = llm.CreateClient();
+            if (attention != null) attention.Init(sheet.baselineAttention);
         }
 
         void OnEnable() => hearing.Heard += OnHeard;
@@ -125,6 +128,8 @@ namespace Improv.Npc
 
             // 돌아볼지는 여기서 정하지 않는다. 어디서 들렸는지만 기억해 두고, LLM이 고르면 그쪽을 본다 (R-016b).
             lastHeardFrom[speech.SpeakerName] = speech.Origin;
+            // T-5: 내 이름이 들리면 귀가 쫑긋한다(집중도 오름). 대답할지는 여전히 LLM이 고른다.
+            if (attention != null && speech.Text.Contains(speaker.DisplayName)) attention.OnNameCalled();
             pending.Add(speech);
             if (!busy) _ = ReplyLoopAsync(destroyCancellationToken);
         }
@@ -161,13 +166,19 @@ namespace Improv.Npc
 
                     string room = roomPresence != null && roomPresence.CurrentRoom != null
                         ? roomPresence.CurrentRoom.DisplayName : "산장 안";
-                    var messages = new List<ChatMessage> { ChatMessage.System(NpcPrompt.BuildSystem(sheet, speaker.DisplayName, room, VisibleNames(), longTerm)) };
-                    foreach (var memory in shortTerm) messages.Add(memory.message);
+                    float attentionValue = attention != null ? attention.Value : 0.5f;
+                    string attentionLevel = attention != null ? attention.LevelName : "보통";
+                    var messages = new List<ChatMessage> { ChatMessage.System(NpcPrompt.BuildSystem(sheet, speaker.DisplayName, room, VisibleNames(), longTerm, attentionValue, attentionLevel)) };
+                    // T-5: 집중도가 낮으면 최근 몇 줄만 떠올린다. 들은 말 자체는 단기 기억에 그대로 있다(흐려지지 않음).
+                    int lines = attention != null ? attention.HistoryLines(shortTerm.Count) : shortTerm.Count;
+                    for (int i = shortTerm.Count - lines; i < shortTerm.Count; i++) messages.Add(shortTerm[i].message);
+                    LlmRequestOptions options = attention?.RequestOptions();
+                    Debug.Log($"[NPC {speaker.DisplayName}] 집중도 {attentionValue:0.00}({attentionLevel}): 기억 {lines}줄, 생각 {options?.ReasoningEffort ?? "기본"}", this);
 
                     int ticket = ++requestTicket;
                     _ = ShowThinkingAfterDelay(ticket, cancel);
                     // jsonMode: 대사와 행동을 JSON 하나로 함께 고르게 한다. 호출 횟수는 그대로다 (P-4).
-                    LlmReply reply = await client.SendAsync(messages, cancel, jsonMode: true);
+                    LlmReply reply = await client.SendAsync(messages, cancel, jsonMode: true, options);
                     requestTicket++;              // 늦게 깨어난 "..." 표시가 켜지지 않게 번호를 바꾼다
                     speaker.ShowThinking = false;
 
@@ -227,6 +238,7 @@ namespace Improv.Npc
             public string look_at;   // 돌아볼 사람 이름. 빈 문자열이면 돌아보지 않는다
             public string say;       // 할 말. 빈 문자열이면 말하지 않는다
             public string remember;  // 집중해서 기억할 짧은 메모. 빈 문자열이면 기억하지 않는다 (R-016d)
+            public float attention = -1f;   // 이 일을 얼마나 신경 쓰나 (0~1, T-5). 답에 없으면 -1로 남아 그대로 둔다
         }
 
         NpcDecision ParseDecision(string json)
@@ -245,6 +257,14 @@ namespace Improv.Npc
 
         void ActOn(NpcDecision decision)
         {
+            // 집중도 (T-5). LLM이 이 캐릭터가 지금 일을 얼마나 신경 쓰는지 골랐다. 다음 판단의 노력이 여기에 따라 달라진다.
+            if (attention != null && decision.attention >= 0f)
+            {
+                float before = attention.Value;
+                attention.Set(decision.attention);
+                Debug.Log($"[NPC {speaker.DisplayName}] 집중도 {before:0.00} → {attention.Value:0.00} ({attention.LevelName})", this);
+            }
+
             // 돌아보기 (R-016b). 들은 적 있는 목소리만 찾을 수 있다. 모르는 이름이면 무시한다.
             if (!string.IsNullOrWhiteSpace(decision.look_at) && characterAnimator != null)
             {
