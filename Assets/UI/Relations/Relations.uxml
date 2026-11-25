@@ -1,0 +1,30 @@
+<!--
+  관계도 창 (T-9, GDD R-028). 모양은 Relations.uss가 정한다. 칸과 화살표는 RelationChartWindow가 코드로 만든다.
+  ui-solid 클래스: 이 위의 클릭은 뒤의 월드로 넘어가지 않는다 (UiPointer).
+-->
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <Style src="Relations.uss" />
+    <ui:VisualElement name="relations-overlay" class="relations-overlay ui-solid">
+        <ui:VisualElement class="relations-window">
+            <ui:VisualElement class="relations-header">
+                <ui:Label class="relations-title" text="관계도" />
+                <ui:Button name="dev-button" class="dev-button" text="개발자 보기" />
+            </ui:VisualElement>
+            <ui:VisualElement class="relations-body">
+                <ui:VisualElement name="graph-area" class="graph-area" />
+                <ui:VisualElement name="editor" class="editor">
+                    <ui:Label name="pair-label" class="pair-label" text="사람 둘을 차례로 누르세요" />
+                    <ui:Label class="editor-caption" text="어떻게 여기나 (짐작)" />
+                    <ui:VisualElement name="mark-row" class="mark-row" />
+                    <ui:Label class="editor-caption" text="메모" />
+                    <ui:TextField name="memo" class="memo" multiline="true" />
+                    <ui:VisualElement class="editor-buttons">
+                        <ui:Button name="swap-button" class="small-button" text="방향 뒤집기" />
+                        <ui:Button name="clear-button" class="small-button" text="지우기" />
+                    </ui:VisualElement>
+                </ui:VisualElement>
+            </ui:VisualElement>
+            <ui:Label name="hint" class="relations-hint" />
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

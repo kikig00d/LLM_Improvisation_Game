@@ -1071,6 +1071,15 @@
                     "processors": "",
                     "interactions": "",
                     "initialStateCheck": false
+                },
+                {
+                    "name": "Relations",
+                    "type": "Button",
+                    "id": "d62dddb3-a48c-4821-a2ff-5506ae053561",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
                 }
             ],
             "bindings": [
@@ -1126,6 +1135,17 @@
                     "processors": "",
                     "groups": "",
                     "action": "SpeedDown",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "906856ee-5b68-4664-98f4-5540b2bf8b32",
+                    "path": "<Keyboard>/r",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Relations",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }
