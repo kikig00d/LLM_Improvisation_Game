@@ -70,6 +70,7 @@ namespace Improv.Npc
         Seen itemTarget;            // 줍기·먹기의 대상 물건
         Bed bedTarget;
         bool eatAfterPickUp;
+        bool starting;              // Execute 안에서 바로 끝난 행동인가 (이미 거기 있음, 어디 있는지 모름 등)
         Room goingRoom;             // 방으로 가는 중이면 그 방. 도착은 "그 방에 들어섰다"로 판정한다
         string leftRoom;            // 출발할 때 있던 방 이름 ("거실에서 나와 개인실에 들어왔다")
 
@@ -197,18 +198,23 @@ namespace Improv.Npc
             LastResult = null;   // 새 행동을 시작하면 지난 결과는 지난 일이다
             Debug.Log($"[NPC {speaker?.DisplayName}] 행동: {action} {target}", this);
 
-            switch (action)
+            starting = true;
+            try
             {
-                case Go: StartGo(target); break;
-                case PickUp: StartPickUp(target, eat: false); break;
-                case Eat:
-                    if (interactor.Held != null && interactor.Held.GetComponent<Food>() != null) { EatHeld(); break; }
-                    StartPickUp(target.Length > 0 ? target : FirstKnownFood(), eat: true);
-                    break;
-                case Drop: DropHeld(); break;
-                case Sleep: StartSleep(); break;
-                default: Report($"'{action}'은(는) 할 수 없는 행동이다"); break;
+                switch (action)
+                {
+                    case Go: StartGo(target); break;
+                    case PickUp: StartPickUp(target, eat: false); break;
+                    case Eat:
+                        if (interactor.Held != null && interactor.Held.GetComponent<Food>() != null) { EatHeld(); break; }
+                        StartPickUp(target.Length > 0 ? target : FirstKnownFood(), eat: true);
+                        break;
+                    case Drop: DropHeld(); break;
+                    case Sleep: StartSleep(); break;
+                    default: Report($"'{action}'은(는) 할 수 없는 행동이다"); break;
+                }
             }
+            finally { starting = false; }
         }
 
         void StartGo(string target)
@@ -233,8 +239,12 @@ namespace Improv.Npc
             // 3) 보이거나 기억하는 사람·물건
             var seen = Recall(target);
             if (seen == null) { Report($"{target}이(가) 어디 있는지 모른다"); return; }
+            float stop = seen.isPerson ? personStopDistance : itemStopDistance;
+            // 이미 곁에 있으면 걷지 않는다. T-8 시험에서 1m 옆 사람에게 "가기"를 고르고 바로 "도착"해 다시 생각하는 고리가 생겼다.
+            if (LivePosition(seen) is Vector2 p && Mathf.Abs(p.y - motor.FeetPosition.y) < 1f && Mathf.Abs(p.x - motor.FeetPosition.x) <= stop + 0.3f)
+            { Report($"이미 {target} 곁에 있다"); return; }
             Begin(Step.Going, $"{target}에게 가는 중");
-            navigator.GoTo(() => LivePosition(seen), seen.isPerson ? personStopDistance : itemStopDistance);
+            navigator.GoTo(() => LivePosition(seen), stop);
         }
 
         void StartPickUp(string target, bool eat)
@@ -319,7 +329,9 @@ namespace Improv.Npc
             step = Step.None;
             LastResult = result;
             Debug.Log($"[NPC {speaker?.DisplayName}] 행동 결과: {result}", this);
-            ActionFinished?.Invoke(result);
+            // 바로 끝난 행동은 두뇌를 다시 부르지 않는다. 부르면 "이미 거실에 있다 → 또 거실로 가기"가 LLM 호출 고리가 된다(T-8 시험, P-4).
+            // 결과는 LastResult로 남아 다음에 생각할 때 "방금 한 일의 결과"로 들어간다.
+            if (!starting) ActionFinished?.Invoke(result);
         }
 
         void Finish(string result)
