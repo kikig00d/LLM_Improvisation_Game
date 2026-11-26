@@ -11,6 +11,7 @@ namespace Improv.Npc
     /// - 같은 층이면 x만 맞추면 된다.
     /// - 다른 층이면 그 두 층을 잇는 계단 입구까지 걸어가서 위/아래 입력으로 오른다.
     /// - 닫힌 문에 막히면 손(CharacterInteractor)으로 연다. 사람 손과 같은 거리·같은 판정이다.
+    /// - 목표가 다른 공간(떨어진 개인실, R-030)이면 먼저 그 길의 문(RoomPortal)까지 가서 손으로 쓴다.
     /// - 다른 것(상자 등)에 오래 막히면 포기하고 실패를 알린다. 실패도 NPC가 겪는 일이다("길이 막혀 못 갔다").
     /// 어디로 갈지는 정하지 않는다. NpcActions가 LLM의 선택에 따라 GoTo를 부른다.
     /// </summary>
@@ -29,6 +30,8 @@ namespace Improv.Npc
         [SerializeField] float giveUpAfter = 3f;
         [Tooltip("막혔을 때 이 거리 안의 닫힌 문은 열어 본다")]
         [SerializeField] float doorProbeDistance = 1.0f;
+        [Tooltip("떨어진 공간의 문(RoomPortal)에 이만큼 가까워지면 쓴다 (손이 닿는 거리보다 작게)")]
+        [SerializeField] float portalUseDistance = 0.6f;
 
         // =====================================================================
         // #2. 상태
@@ -75,9 +78,13 @@ namespace Improv.Npc
             Vector2 feet = motor.FeetPosition;
             if (arrivedWhen != null && arrivedWhen(feet)) { Arrive(); return; }   // 계단을 다 오른 뒤에만 본다(위에서 return)
 
+            // 다른 공간이면 목표 대신 그 길의 문으로 간다. 문을 지나면 다음 프레임에 다시 판단한다.
+            RoomPortal portal = RoomPortal.NextOnWay(RoomPortal.SpaceOf(feet), RoomPortal.SpaceOf(target));
+            if (portal != null) target = portal.Position;
+
             float myFloor = FloorOf(feet.y), targetFloor = FloorOf(target.y);
             Vector2 waypoint = target;
-            float tolerance = stopDistance;
+            float tolerance = portal != null ? portalUseDistance : stopDistance;   // 문으로 갈 때는 문 앞까지 붙는다
             if (!Mathf.Approximately(myFloor, targetFloor))
             {
                 // 다른 층: 두 층을 잇는 계단을 찾아 입구로 간다.
@@ -96,9 +103,17 @@ namespace Improv.Npc
             }
 
             float dx = waypoint.x - feet.x;
+            if (portal != null && Mathf.Approximately(myFloor, targetFloor) && Mathf.Abs(dx) <= portalUseDistance)
+            {
+                // 문 앞에 왔다. 사람과 같은 손으로 연다(거리·벽 판정 그대로).
+                motor.SetMoveInput(Vector2.zero);
+                var result = interactor.TryInteract(portal);
+                if (result != InteractionResult.Done && result != InteractionResult.Busy) Fail("문으로 들어가지 못했다");
+                return;
+            }
             if (Mathf.Abs(dx) <= tolerance)
             {
-                if (Mathf.Approximately(myFloor, targetFloor)) { Arrive(); return; }
+                if (Mathf.Approximately(myFloor, targetFloor) && portal == null) { Arrive(); return; }
                 motor.SetMoveInput(Vector2.zero);   // 계단 입구에 닿았다. 다음 프레임에 오르기 시작한다
                 return;
             }

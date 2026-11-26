@@ -53,6 +53,18 @@ namespace Improv.Characters
         // 조종자가 매 프레임 호출한다. 실제 이동은 FixedUpdate에서 일어난다.
         public void SetMoveInput(Vector2 input) => moveInput = Vector2.ClampMagnitude(input, 1f);
 
+        /// <summary>
+        /// 발을 그 자리로 옮긴다. 떨어진 공간의 문(RoomPortal)이 부른다 (R-030). 계단 위에서는 쓰지 않는다.
+        /// body.position은 물리 엔진을 거치지 않는 순간 이동이라 세로 잠금(FreezePositionY)에 걸리지 않는다.
+        /// </summary>
+        public void Teleport(Vector2 feet)
+        {
+            body.position = feet;
+            transform.position = feet;   // 보간(Interpolate)이 옛 자리에서 미끄러져 오지 않게 그림도 바로 옮긴다
+            body.linearVelocity = Vector2.zero;
+            lastStepPosition = feet;
+        }
+
         // ==========================================
         // #4. 유니티 생명주기
         // ==========================================

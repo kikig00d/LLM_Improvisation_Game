@@ -79,27 +79,56 @@ namespace Improv.Characters.Speech
         };
 
         /// <summary>이 말이 내 귀에 닿는지. 아무것도 바꾸지 않는 미리보기다.</summary>
-        public bool CanHear(SpeechEvent speech) =>
-            Vector2.Distance(EarPosition, speech.Origin) <= EffectiveRange(speech);
+        public bool CanHear(SpeechEvent speech) => Measure(speech, out float distance, out float range) && distance <= range;
+
+        /// <summary>
+        /// 입에서 귀까지 소리가 지나는 길의 길이와, 그 길에서 줄어든 뒤의 들리는 거리.
+        /// 같은 공간이면 직선 하나다. 떨어진 공간(개인실, R-030)이 끼면 소리는 그 방의 문을 거친다:
+        /// 입 → 안쪽 문, 바깥쪽 문 → 귀 처럼 공간마다 한 구간씩 재서 더하고, 지나는 문마다 닫힌 문 통과율을 곱한다.
+        /// 문 짝을 못 찾으면 false (들릴 길이 없다).
+        /// </summary>
+        public bool Measure(SpeechEvent speech, out float distance, out float range)
+        {
+            Vector2 from = speech.Origin, ear = EarPosition;
+            range = RangeFor(speech.Volume);
+            distance = 0f;
+            var mySpace = RoomPortal.SpaceOf(ear);
+            var space = RoomPortal.SpaceOf(from);
+            // 다른 공간이면 문을 하나씩 지난다. 방 → 복도 → 방이라 많아야 두 번 (C의 while + 안전장치)
+            for (int guard = 0; space != mySpace && guard < 4; guard++)
+            {
+                var door = RoomPortal.NextOnWay(space, mySpace);
+                if (door == null) return false;
+                Vector2 doorPoint = door.Position + Vector2.up * earHeight;   // 문 앞, 귀 높이에서 소리가 넘어간다
+                distance += Vector2.Distance(from, doorPoint);
+                range *= Transmission(from, doorPoint) * closedDoorTransmission;   // 떨어진 공간의 문은 늘 닫힌 것으로 본다 [가정]
+                from = door.Other.Position + Vector2.up * earHeight;
+                space = RoomPortal.SpaceOf(door.Other.Position);
+            }
+            if (space != mySpace) return false;
+            distance += Vector2.Distance(from, ear);
+            range *= Transmission(from, ear);
+            return true;
+        }
 
         /// <summary>
         /// 장애물을 지나며 줄어든 뒤의 들리는 거리 (R-014b).
         /// 예: 보통 6유닛, 벽 하나(30%)와 천장 하나(40%)를 지나면 6 × 0.3 × 0.4 = 0.72유닛.
         /// </summary>
-        public float EffectiveRange(SpeechEvent speech)
+        public float EffectiveRange(SpeechEvent speech) => Measure(speech, out _, out float range) ? range : 0f;
+
+        // 한 공간 안의 직선 구간 하나에서 소리가 얼마나 남나 (0~1).
+        float Transmission(Vector2 from, Vector2 to)
         {
-            Vector2 ear = EarPosition;
-            float range = RangeFor(speech.Volume);
-
             // 천장: 지나는 층 수만큼 곱한다. 입과 귀 모두 발에서 같은 높이라 층 번호를 그대로 비교할 수 있다.
-            int floorsCrossed = Mathf.Abs(FloorIndex(speech.Origin.y) - FloorIndex(ear.y));
-            range *= Mathf.Pow(ceilingTransmission, floorsCrossed);
+            int floorsCrossed = Mathf.Abs(FloorIndex(from.y) - FloorIndex(to.y));
+            float t = Mathf.Pow(ceilingTransmission, floorsCrossed);
 
-            // 벽과 문: 입에서 귀까지 선을 그어 걸리는 장애물마다 곱한다.
-            int count = Physics2D.Linecast(speech.Origin, ear, solidOnly, hitBuffer);
+            // 벽과 문: 선을 그어 걸리는 장애물마다 곱한다.
+            int count = Physics2D.Linecast(from, to, solidOnly, hitBuffer);
             for (int i = 0; i < count; i++)
-                range *= TransmissionOf(hitBuffer[i].collider);
-            return range;
+                t *= TransmissionOf(hitBuffer[i].collider);
+            return t;
         }
 
         int FloorIndex(float y) => Mathf.FloorToInt(y / floorHeight);
@@ -142,9 +171,7 @@ namespace Improv.Characters.Speech
         /// </summary>
         public SpeechEvent Perceive(SpeechEvent speech)
         {
-            float distance = Vector2.Distance(EarPosition, speech.Origin);
-            float range = EffectiveRange(speech);
-            if (distance > range) return null;
+            if (!Measure(speech, out float distance, out float range) || distance > range) return null;
 
             float noise = NoiseLevel(distance, range);
             if (noise <= 0f) return speech;
