@@ -67,11 +67,23 @@ namespace Improv.Characters
         /// 크킹 3에서 인생관 특전이 없어도 능력치가 높으면 되는 것과 같다. 예) 운반은 근력 2점 ≈ 기능 1.
         /// 예) 감각 13, 관찰 2, perPoint 0.03, perSkill 0.04 → 1 + 0.09 + 0.08 = 1.17
         /// </summary>
-        public float Factor(Ability a, float perPoint, string skill = null, float perSkill = 0f, float min = 0.3f, float max = 2f)
+        public float Factor(Ability a, float perPoint, string skill = null, float perSkill = 0f, float min = 0.3f, float max = 2f) =>
+            Mathf.Clamp(1f + Bonus(a, perPoint, skill, perSkill), min, max);
+
+        /// <summary>
+        /// 줄이는 쪽 배율 (소모, 피해): 기본값 × (1 − 보너스 합). 크킹 3식 '기본 × (1 + 모든 % 보너스 합)'에서 보너스가 음수로 들어가는 것과 같다 (사용자 2026-11-26).
+        /// 나누기(÷ Factor)와 달리 높을수록 곧게 줄어 0에 닿을 수 있으므로 바닥 min을 둔다.
+        /// 예) 체력 13, perPoint 0.04 → 보너스 0.12 → 소모 × 0.88
+        /// </summary>
+        public float CostFactor(Ability a, float perPoint, string skill = null, float perSkill = 0f, float min = 0.3f, float max = 2f) =>
+            Mathf.Clamp(1f - Bonus(a, perPoint, skill, perSkill), min, max);
+
+        /// <summary>% 보너스의 합: 보통(10)에서 멀어진 점수 × perPoint + 기능 수준 × perSkill.</summary>
+        public float Bonus(Ability a, float perPoint, string skill = null, float perSkill = 0f)
         {
-            float f = 1f + (Get(a) - AbilityNames.Average) * perPoint;
-            if (skill != null) f += Skill(skill) * perSkill;
-            return Mathf.Clamp(f, min, max);
+            float b = (Get(a) - AbilityNames.Average) * perPoint;
+            if (skill != null) b += Skill(skill) * perSkill;
+            return b;
         }
 
         // =====================================================================

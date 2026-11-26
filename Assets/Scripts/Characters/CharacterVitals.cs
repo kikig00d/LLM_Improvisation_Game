@@ -112,27 +112,32 @@ namespace Improv.Characters
             bool asleep = sleep != null && sleep.IsAsleep;
             bool walking = !asleep && motor.Velocity.magnitude > WalkSpeedThreshold;
             // R-031a: 체력이 높으면 덜 지치고 빨리 찬다. 근력·운반이 높으면 들고 걸어도 덜 지치고 덜 느려진다.
+            // 늘리는 것은 × (1 + 보너스), 줄이는 것은 × (1 − 보너스) (크킹 3식, 사용자 2026-11-26)
             float endurance = AbilityFactor(Ability.Endurance, endurancePerPoint);
+            float enduranceCost = AbilityCost(Ability.Endurance, endurancePerPoint);
             float carryAbility = abilities != null ? abilities.Factor(Ability.Strength, carryStrengthPerPoint, "운반", carrySkillPerLevel) : 1f;
-            float carryCost = 1f + (carryCostMultiplier - 1f) / carryAbility;   // 보통 2배, 장사는 1.5배쯤
+            float carryExtra = abilities != null ? abilities.CostFactor(Ability.Strength, carryStrengthPerPoint, "운반", carrySkillPerLevel) : 1f;
+            float carryCost = 1f + (carryCostMultiplier - 1f) * carryExtra;   // 보통 2배, 장사는 1.5배쯤
             motor.SpeedMultiplier = carrying ? Mathf.Clamp(carrySpeedMultiplier * carryAbility, 0.3f, 1f) : 1f;
             float staminaRate;
             if (asleep) staminaRate = staminaSleepGain * endurance;
-            else if (walking) staminaRate = -staminaWalkCost * (carrying ? carryCost : 1f) / endurance;
+            else if (walking) staminaRate = -staminaWalkCost * (carrying ? carryCost : 1f) * enduranceCost;
             else staminaRate = carrying ? 0f : staminaRestGain * endurance;
             Stamina = Mathf.Clamp(Stamina + staminaRate * dt, 0f, Max);
 
             // 건강: 빈 하위 바(0)가 있으면 줄고, 모두 넉넉하면 회복한다
             int emptyBars = (Hunger <= 0f ? 1 : 0) + (Stamina <= 0f ? 1 : 0) + (Temperature <= 0f ? 1 : 0);
             bool healthy = Hunger > healthyThreshold && Stamina > healthyThreshold && Temperature > healthyThreshold;
-            float constitution = AbilityFactor(Ability.Health, healthPerPoint);   // 건장한 노인은 굶어도 덜 상한다
-            float healthRate = -emptyBars * damagePerEmptyBarPerDay / constitution + (healthy ? healthRegenPerDay * constitution : 0f);
+            float constitution = AbilityFactor(Ability.Health, healthPerPoint);
+            float constitutionCost = AbilityCost(Ability.Health, healthPerPoint);   // 건장한 노인은 굶어도 덜 상한다
+            float healthRate = -emptyBars * damagePerEmptyBarPerDay * constitutionCost + (healthy ? healthRegenPerDay * constitution : 0f);
             Health = Mathf.Clamp(Health + healthRate / day * dt, 0f, Max);
 
             if (Health <= 0f) Die();
         }
 
         float AbilityFactor(Ability a, float perPoint) => abilities != null ? abilities.Factor(a, perPoint) : 1f;
+        float AbilityCost(Ability a, float perPoint) => abilities != null ? abilities.CostFactor(a, perPoint) : 1f;
 
         // =====================================================================
         // #4. 바꾸기
