@@ -53,7 +53,6 @@ MonoBehaviour:
   pointsPerSkillPoint: 2
   capDivisor: 3
   abilityRange: {x: 1, y: 30}
-  functionalBudget: 40
-  stateBudget: 30
+  budget: 70
   makingRange: {x: 4, y: 16}
   spread: 2

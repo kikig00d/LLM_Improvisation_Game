@@ -6,7 +6,7 @@ namespace Improv.Characters
     // =====================================================================
     // 능력치와 기능의 값 (GDD R-031, IDEAS I-10). MonoBehaviour가 아닌 데이터라 한 파일에 모은다.
     // 틀은 마운트 앤 블레이드 1편식: 능력치가 높을수록 그 계열 기능에 쓸 점수가 늘고, 기능 수준은 능력치가 허락하는 데까지.
-    // 숫자 감각은 크킹 3식: 10이 보통 사람 (사용자 2026-11-26).
+    // 이 게임은 10이 보통 사람이다. 1점 차이의 무게는 크킹 3식이다(9와 11이 눈에 띄게 다르다) (사용자 2026-11-26).
     // =====================================================================
 
     /// <summary>
@@ -28,6 +28,7 @@ namespace Improv.Characters
     {
         public const int Count = 7;
         public const int FunctionalCount = 4;   // 0~3이 기능 능력치, 4~6이 상태 능력치
+        public const int Average = 10;           // 보통 사람의 값. 효과 배율은 여기서 1이다 (O-018)
         public static readonly string[] Korean = { "근력", "민첩", "지능", "감각", "정신력", "건강", "체력" };
 
         public static string Of(Ability a) => Korean[(int)a];
@@ -40,7 +41,7 @@ namespace Improv.Characters
             return i >= 0;
         }
 
-        /// <summary>크킹 3의 구간 말. 10이 보통이다 [가정 O-018].</summary>
+        /// <summary>구간 말. 10이 보통이다 [가정 O-018].</summary>
         public static string Band(int value) =>
             value <= 4 ? "아주 낮음" : value <= 8 ? "낮음" : value <= 12 ? "보통" : value <= 16 ? "좋음" : "뛰어남";
     }
@@ -50,12 +51,12 @@ namespace Improv.Characters
     public class AbilityScores
     {
         public bool set;                                  // false면 아직 안 정함(옛 시트). 생성기가 굴린다
-        public int[] values = { 10, 10, 10, 10, 10, 10, 10 };
+        public int[] values = { 10, 10, 10, 10, 10, 10, 10 };   // 모두 보통 사람(AbilityNames.Average)
         public List<SkillLevel> skills = new();
 
         public int this[Ability a]
         {
-            get => values != null && (int)a < values.Length ? values[(int)a] : 10;
+            get => values != null && (int)a < values.Length ? values[(int)a] : AbilityNames.Average;
             set { EnsureShape(); values[(int)a] = value; }
         }
 
@@ -78,7 +79,7 @@ namespace Improv.Characters
             if (values == null || values.Length != AbilityNames.Count)
             {
                 var v = new int[AbilityNames.Count];
-                for (int i = 0; i < v.Length; i++) v[i] = values != null && i < values.Length ? values[i] : 10;
+                for (int i = 0; i < v.Length; i++) v[i] = values != null && i < values.Length ? values[i] : AbilityNames.Average;
                 values = v;
             }
             skills ??= new List<SkillLevel>();

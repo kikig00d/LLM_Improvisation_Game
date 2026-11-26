@@ -30,15 +30,14 @@ namespace Improv.Characters
         public Vector2Int abilityRange = new(1, 30);
 
         [Header("캐릭터 메이킹 (R-031c)")]
-        [Tooltip("기능 능력치 넷의 합. 보통 사람 10 × 4")]
-        public int functionalBudget = 40;
-        [Tooltip("상태 능력치 셋의 합. 보통 사람 10 × 3")]
-        public int stateBudget = 30;
+        // 기능 능력치와 상태 능력치가 한 주머니를 함께 쓴다 (사용자 2026-11-26): 건강을 깎아 지능에 몰아주는 '병약한 천재'가 되게.
+        [Tooltip("능력치 일곱의 합. 보통 사람 10 × 7")]
+        public int budget = 70;
         [Tooltip("메이킹에서 한 능력치를 이 범위 밖으로 못 옮긴다")]
         public Vector2Int makingRange = new(4, 16);
 
         [Header("NPC 생성 (R-031b)")]
-        [Tooltip("보통 사람 10에서 위아래로 흔드는 폭. 두 번 굴려 더하므로 가운데가 잦다")]
+        [Tooltip("보통 사람(10)에서 위아래로 흔드는 폭. 두 번 굴려 더하므로 가운데가 잦다")]
         public int spread = 2;
 
         // =====================================================================
@@ -89,13 +88,13 @@ namespace Improv.Characters
         }
 
         /// <summary>
-        /// NPC와 주사위의 능력치 굴리기 (R-031b). 10에서 흔들고, 직업·유년기의 보정을 더한 뒤, 기능 점수를 쓴다.
+        /// NPC와 주사위의 능력치 굴리기 (R-031b). 보통(10)에서 흔들고, 직업·유년기의 보정을 더한 뒤, 기능 점수를 쓴다.
         /// favored(직업이 잘하는 기능)부터 채우고, 남은 점수는 같은 계열의 기능에 무작위로.
         /// </summary>
         public AbilityScores Roll(System.Random rng, IEnumerable<AbilityBonus> bonuses, IEnumerable<string> favored)
         {
             var s = new AbilityScores { set = true };
-            for (int i = 0; i < AbilityNames.Count; i++) s.values[i] = 10 + rng.Next(-spread, spread + 1) + rng.Next(-spread, spread + 1);
+            for (int i = 0; i < AbilityNames.Count; i++) s.values[i] = AbilityNames.Average + rng.Next(-spread, spread + 1) + rng.Next(-spread, spread + 1);
             if (bonuses != null) foreach (var b in bonuses) s[b.ability] += b.value;
             Clamp(s);
             SpendSkills(s, rng, favored);

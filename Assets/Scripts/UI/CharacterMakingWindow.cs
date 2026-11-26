@@ -248,15 +248,16 @@ namespace Improv.UI
             var s = draft.abilities;
             s.EnsureShape();
             Section("능력치와 기능 (10이 보통 사람)");
-            AbilityGroup(rules, s, 0, AbilityNames.FunctionalCount, rules.functionalBudget, "기능 능력치: 힘으로 문 열기, 글 읽기 같은 판정에 쓴다", true);
-            AbilityGroup(rules, s, AbilityNames.FunctionalCount, AbilityNames.Count, rules.stateBudget, "상태 능력치: 스트레스, 지침, 병을 버티는 힘", false);
+            // 기능·상태 능력치가 한 주머니를 같이 쓴다 (사용자 2026-11-26, '병약한 천재')
+            int sum = 0;
+            for (int i = 0; i < AbilityNames.Count; i++) sum += s.values[i];
+            int left = rules.budget - sum;
+            AbilityGroup(rules, s, 0, AbilityNames.FunctionalCount, left, "기능 능력치: 힘으로 문 열기, 글 읽기 같은 판정에 쓴다", true);
+            AbilityGroup(rules, s, AbilityNames.FunctionalCount, AbilityNames.Count, left, "상태 능력치: 스트레스, 지침, 병을 버티는 힘", false);
         }
 
-        void AbilityGroup(AbilityRules rules, AbilityScores s, int from, int to, int budget, string caption, bool withSkills)
+        void AbilityGroup(AbilityRules rules, AbilityScores s, int from, int to, int left, string caption, bool withSkills)
         {
-            int sum = 0;
-            for (int i = from; i < to; i++) sum += s.values[i];
-            int left = budget - sum;
             var head = Row(from == 0 ? "⑨" : "");
             Text(head, $"{caption} (남은 점수 {left})");
             if (from == 0) Dice(head, () => PersonaDice.Abilities(draft, tables, rng));

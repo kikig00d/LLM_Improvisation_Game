@@ -63,11 +63,13 @@ namespace Improv.Characters
 
         /// <summary>
         /// 효과 배율: 보통(10)에서 1점 멀어질 때마다 perPoint만큼. 기능은 수준 1마다 perSkill만큼 더한다.
+        /// 둘을 더하므로 능력치가 기능을 메운다 (사용자 2026-11-26): 근력이 뛰어나면 운반 기술이 없어도 힘으로 때운다.
+        /// 크킹 3에서 인생관 특전이 없어도 능력치가 높으면 되는 것과 같다. 예) 운반은 근력 2점 ≈ 기능 1.
         /// 예) 감각 13, 관찰 2, perPoint 0.03, perSkill 0.04 → 1 + 0.09 + 0.08 = 1.17
         /// </summary>
         public float Factor(Ability a, float perPoint, string skill = null, float perSkill = 0f, float min = 0.3f, float max = 2f)
         {
-            float f = 1f + (Get(a) - 10) * perPoint;
+            float f = 1f + (Get(a) - AbilityNames.Average) * perPoint;
             if (skill != null) f += Skill(skill) * perSkill;
             return Mathf.Clamp(f, min, max);
         }
