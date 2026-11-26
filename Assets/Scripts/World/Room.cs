@@ -23,12 +23,15 @@ namespace Improv.World
 
         [SerializeField] string displayName = "방";              // 화면과 로그, 나중에 LLM 문맥에 쓰일 이름
         [SerializeField] Vector2 size = new(4f, 3f);             // 방의 가로, 세로 (유닛). 위치는 Transform 중심
+        [Tooltip("켜면 따로 떨어진 공간(개인실 등). 문(RoomPortal)으로만 드나들고, 눈과 귀도 그 문을 거친다 (R-030)")]
+        [SerializeField] bool detached;
 
         // ==========================================
         // #3. 바깥에 제공하는 정보
         // ==========================================
 
         public string DisplayName => displayName;
+        public bool Detached => detached;
 
         // Rect는 왼쪽 아래 모서리와 크기로 정의하는 사각형. 중심에서 절반 크기를 빼서 모서리를 구한다.
         public Rect Bounds => new((Vector2)transform.position - size * 0.5f, size);

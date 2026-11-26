@@ -133,6 +133,8 @@ namespace Improv.Characters.Sight
         {
             if (eyesClosed) return false;
             Vector2 eye = EyePosition;
+            // 떨어진 공간(개인실, R-030)이 다르면 문 너머라 보이지 않는다.
+            if (Improv.World.RoomPortal.SpaceOf(eye) != Improv.World.RoomPortal.SpaceOf(point)) return false;
             Vector2 toPoint = point - eye;
             float distance = toPoint.magnitude;
 

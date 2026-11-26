@@ -25,6 +25,7 @@
 - 보는 것도 같다. `Vision.CanSee()`가 유일한 판정이고, 화면 안개(`FogOfWarView`), 클릭 대상, NPC가 LLM에 넘기는 "보이는 사람"이 모두 이 판정을 쓴다. 층 바닥처럼 충돌체 없이 시야만 막는 것은 `SightBlocker`, 몸은 막지만 눈은 안 막는 것은 `SeeThrough`.
 - 사람은 `CharacterIdentity.Id`(바뀌지 않는 번호)로 구분한다. 이름은 바뀔 수 있는 꼬리표라(개명, 동명이인) 코드에서 이름을 키로 쓰지 않는다. 단, NPC가 기억하는 것은 들은 이름뿐이다(P-3). 플레이어 단어 사전의 이름은 지금 씬의 이름으로 게임 중 채운다.
 - 시간은 `GameClock` 하나가 정하고 속도를 `Time.timeScale`로 건다. 그래서 `Time.time`/`Time.deltaTime`이 곧 게임 시간이다(멈추면 0). 실제 시간이 필요한 곳(깨우기 입력 지연 등)만 `Time.unscaledTime`을 쓰고, 실제 시간으로 오는 LLM 답은 `GameClock.IsPaused` 동안 들고 있다가 쓴다.
+- 개인실과 스태프 룸은 떨어진 공간(`Room.detached`)이다(GDD R-030). 월드 오른쪽 먼 곳에 실제로 있고 `World/RoomPortal` 짝 문으로만 드나든다. 귀·눈·NPC 길 찾기는 공간이 다르면 그 문을 거친다(`RoomPortal.SpaceOf`, `NextOnWay`). 새 떨어진 방은 서로, 그리고 산장과 화면 하나 넘게 떨어뜨려 둔다.
 - 방(`Room`)은 문·계단·천장 같은 경계로 닫힌 공간의 영역이다(GDD R-024, 지금은 손으로 그린 사각형). NPC가 방으로 가면 그 영역에 들어서는 것이 도착이다. NPC 행동은 LLM이 고르고 `NpcActions`(무엇을, 본 것 기억)와 `NpcNavigator`(층 + x 길 찾기, 문 열기)가 같은 몸으로 해낸다.
 - NPC 시트는 판이 시작할 때 `CastGenerator`가 만든다(목록 `Assets/Data/Generation/CharacterTables.asset`, GDD R-026). 겹치는 과거의 진실은 생성기가 들고 있고, NPC의 LLM에는 자기 판본만 넘긴다. 시험할 때는 `usePreset`(기본 켬)으로 미리 써 둔 판(`Assets/Data/Characters/TestCast/TestCastPreset.asset`)을 로딩 없이 쓰고, 생성을 보려면 끈다. 손으로 쓴 옛 시트를 쓰려면 CastGenerator를 끈다.
 - 관계도는 `Characters/RelationBook`(GDD R-027): 호감 = 묵은 감정 + 까닭 붙은 수정치, 애정 = 드러난 면모, 자기 자신은 "이제까지의 나". 값은 LLM이 JSON `relation`으로 고르고 코드는 기록·흐려짐·상쇄만 한다.
