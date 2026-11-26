@@ -1,0 +1,22 @@
+<!--
+  캐릭터 메이킹 창 (GDD R-029). 모양은 Making.uss가 정한다. 문장 칸은 CharacterMakingWindow가 코드로 만든다.
+  ui-solid 클래스: 이 위의 클릭은 뒤의 월드로 넘어가지 않는다 (UiPointer).
+-->
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <Style src="Making.uss" />
+    <ui:VisualElement name="making-overlay" class="making-overlay ui-solid">
+        <ui:VisualElement class="making-window">
+            <ui:VisualElement class="making-header">
+                <ui:Label class="making-title" text="나는 누구인가" />
+                <ui:Label class="making-subtitle" text="빈칸에 보기를 고르거나 짧게 채웁니다. 비운 칸은 시작할 때 무작위로 채웁니다." />
+            </ui:VisualElement>
+            <ui:ScrollView name="form" class="making-form" />
+            <ui:VisualElement class="making-footer">
+                <ui:Label name="making-status" class="making-status" />
+                <ui:Button name="random-button" class="footer-button" text="모두 무작위" />
+                <ui:Button name="llm-button" class="footer-button" text="LLM이 빈칸 채워 줘" />
+                <ui:Button name="start-button" class="footer-button start-button" text="시작" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using Improv.Characters;
 using Improv.Llm;
+using Improv.Player;
 using Improv.World;
 using UnityEngine;
 
@@ -17,6 +18,8 @@ namespace Improv.Npc.Generation
     /// 같은 씨드면 1~2가 같다. 3의 글은 LLM 씨드로 최대한 같게 하지만 완전히 같다는 보장은 없다.
     /// "프리셋 쓰기"를 켜면 1~4를 건너뛰고 미리 써 둔 판(CastPreset)을 바로 끼운다. 시험할 때 로딩을 없애려고.
     /// 이 컴포넌트를 끄면 NPC는 씬에 연결된 손으로 쓴 시트를 그대로 쓴다.
+    /// "플레이어 메이킹"을 켜면 먼저 플레이어가 메이킹 창에서 자기 캐릭터를 다 쓸 때까지 기다리고, NPC를 그 사람에 맞춰 만든다 (GDD R-029).
+    /// 플레이어와 NPC 한 명 사이에 가벼운 인연을 하나 쓴다. 프리셋을 써도 이 과거만은 새로 쓴다.
     /// </summary>
     [DefaultExecutionOrder(-50)]
     public class CastGenerator : MonoBehaviour
@@ -38,6 +41,10 @@ namespace Improv.Npc.Generation
         [SerializeField] int maxTokens = 3000;   // 생각을 켜면 생각 글자도 여기에 들어가서 넉넉해야 한다
         // 규격 줄(JSON 목록)로 바꾼 뒤 답이 길어져 대화용 기본값 60초를 넘겼다. 판 시작 때 한 번뿐이라 길게 준다.
         [SerializeField] int timeoutSeconds = 150;
+        [Tooltip("켜면 판을 시작하기 전에 플레이어 캐릭터 메이킹 창을 띄우고, NPC를 그 사람에 맞춰 만든다 (R-029)")]
+        [SerializeField] bool playerMaking = true;
+        [SerializeField] PlayerPersona player;
+        [SerializeField] MakingTemplates makingTemplates;
 
         // =====================================================================
         // #2. 상태
@@ -51,15 +58,22 @@ namespace Improv.Npc.Generation
         public IReadOnlyList<SharedPast> Pasts => pasts;
         public IReadOnlyList<NpcCharacterSheet> Sheets => sheets;
         bool UsingPreset => usePreset && preset != null && preset.sheets.Count > 0;
+        public bool Making => playerMaking && player != null && makingTemplates != null;
+        /// <summary>메이킹 창이 떠 있어야 하는 동안 true. 창은 이것을 보고 연다.</summary>
+        public bool WaitingForPlayer { get; private set; }
+        public CharacterTables Tables => tables;
+        public MakingTemplates Templates => makingTemplates;
+        public LlmSettings Llm => llm;
 
         readonly List<CastMember> cast = new();
         readonly List<SharedPast> pasts = new();
         readonly List<NpcCharacterSheet> sheets = new();
+        CastMember playerMember;   // 메이킹으로 만든 플레이어. cast(NPC 목록)에는 넣지 않는다
 
         // 과거 하나를 쓸 두 사람과 종류. (C의 작은 struct)
         struct Link
         {
-            public int a, b;
+            public int a, b;       // cast 번호. a가 -1이면 플레이어
             public bool heavy;
             public PastKind kind;
             public int yearsAgo;    // 몇 년 전 일인가. 어린 쪽이 그때 적어도 minAgeAtPast살이 되게 코드가 정한다
@@ -78,9 +92,12 @@ namespace Improv.Npc.Generation
             if (tables == null) { Debug.LogError("[CastGenerator] tables(CharacterTables)가 비어 있습니다.", this); enabled = false; return; }
             if (llm == null) { Debug.LogError("[CastGenerator] llm(LlmSettings)이 비어 있습니다.", this); enabled = false; return; }
             npcs.RemoveAll(n => n == null);
-            if (UsingPreset) return;   // 프리셋은 기다릴 것이 없어 두뇌를 끄지 않는다
+            if (playerMaking && player != null && makingTemplates == null)
+                Debug.LogError("[CastGenerator] makingTemplates(MakingTemplates)가 비어 있어 플레이어 메이킹을 건너뜁니다.", this);
+            if (UsingPreset && !Making) return;   // 프리셋은 기다릴 것이 없어 두뇌를 끄지 않는다
             // 시트가 나오기 전에 NPC가 말을 듣고 답하지 않게 두뇌를 꺼 둔다.
             foreach (var npc in npcs) npc.enabled = false;
+            if (Making) { WaitingForPlayer = true; return; }   // 메이킹 창이 떠 있는 동안은 "모이는 중" 덮개를 띄우지 않는다
             IsGenerating = true;
             Status = "산장에 사람들이 모이는 중...";
         }
@@ -94,16 +111,32 @@ namespace Improv.Npc.Generation
         async Awaitable Start()
         {
             if (!enabled) return;
-            if (UsingPreset) { ApplyPreset(); return; }
+            if (UsingPreset && !Making) { ApplyPreset(preset.sheets); return; }
             int resumeStep = PauseClock();
             try
             {
+                if (Making)
+                {
+                    // 플레이어가 메이킹 창에서 "시작"을 누를 때까지 기다린다. 한 프레임씩 쉬며 확인한다 (C의 폴링 루프와 같다).
+                    while (!player.Ready) await Awaitable.NextFrameAsync(destroyCancellationToken);
+                    WaitingForPlayer = false;
+                    playerMember = player.Member;
+                    IsGenerating = true;
+                    Status = "산장에 사람들이 모이는 중...";
+                }
+
                 UsedSeed = seed != 0 ? seed : Math.Max(1, Environment.TickCount & 0x7fffffff);
                 var rng = new System.Random(UsedSeed);   // 같은 씨드면 같은 순서로 같은 값이 나온다
                 Debug.Log($"[캐스트] 씨드 {UsedSeed}. 같은 사람들을 다시 보려면 CastGenerator의 seed에 이 값을 넣는다.", this);
 
-                BuildMembers(rng);
-                var links = PickLinks(rng);
+                // 프리셋: NPC는 손으로 쓴 판 그대로, 플레이어와의 과거만 새로 쓴다. 생성: NPC를 플레이어에 맞춰 새로 만든다.
+                List<NpcCharacterSheet> presetCopies = null;
+                if (UsingPreset) presetCopies = PresetMembers();
+                else BuildMembers(rng);
+                var links = new List<Link>();
+                var playerLink = PickPlayerLink(rng, adjustAge: !UsingPreset);   // NPC끼리의 과거보다 먼저: 짝의 나이를 맞출 수 있게
+                if (!UsingPreset) links.AddRange(PickLinks(rng));
+                if (playerLink.HasValue) links.Add(playerLink.Value);
 
                 var client = llm.CreateClient();
                 for (int i = 0; i < links.Count; i++)
@@ -111,15 +144,24 @@ namespace Improv.Npc.Generation
                     Status = $"사람들의 과거를 쓰는 중... ({i + 1}/{links.Count})";
                     var options = new LlmRequestOptions { ReasoningEffort = reasoningEffort, MaxTokens = maxTokens, Seed = UsedSeed + i, TimeoutSeconds = timeoutSeconds };
                     var link = links[i];
-                    pasts.Add(await PastWriter.WriteAsync(client, cast[link.a], cast[link.b], link.kind, link.heavy, link.yearsAgo, options, destroyCancellationToken));
+                    pasts.Add(await PastWriter.WriteAsync(client, Member(link.a), Member(link.b), link.kind, link.heavy, link.yearsAgo, options, destroyCancellationToken));
                 }
 
-                foreach (var m in cast)
+                if (presetCopies != null)
                 {
-                    var sheet = BuildSheet(m);
-                    sheets.Add(sheet);
-                    m.brain.ApplySheet(sheet);
+                    for (int i = 0; i < cast.Count; i++) AddPasts(presetCopies[i], cast[i], includePlayer: true);
+                    ApplyPreset(presetCopies);
                 }
+                else
+                    foreach (var m in cast)
+                    {
+                        var sheet = BuildSheet(m, includePlayer: true);
+                        sheets.Add(sheet);
+                        m.brain.ApplySheet(sheet);
+                    }
+                // 플레이어 몫의 판본은 플레이어만 안다. 관계도 창의 '나' 칸에서 읽는다.
+                foreach (var p in pasts)
+                    if (playerMember != null && p.a == playerMember) player.AddMemory(PastFormat.Memory(p.b.name, p.heavy, p.versionA));
                 LogCast();
             }
             catch (OperationCanceledException) { }   // Play를 멈춰 취소됨
@@ -144,6 +186,12 @@ namespace Improv.Npc.Generation
                 if (!npcs.Exists(n => n.gameObject == who.gameObject)) usedNames.Add(who.DisplayName);
             var usedChildhoods = new HashSet<Background>();
             var usedAdulthoods = new HashSet<Background>();
+            // NPC는 플레이어에 맞춘다: 플레이어와 같은 배경은 되도록 피하고, 하나뿐인 직업(산장 관리인)은 절대 겹치지 않게 (R-029).
+            if (playerMember != null)
+            {
+                if (playerMember.childhood != null) usedChildhoods.Add(playerMember.childhood);
+                if (playerMember.adulthood != null) usedAdulthoods.Add(playerMember.adulthood);
+            }
 
             foreach (var brain in npcs)
             {
@@ -210,13 +258,74 @@ namespace Improv.Npc.Generation
             return links;
         }
 
-        bool Fits(PastKind kind, int a, int b) => kind.maxAgeGap <= 0 || Mathf.Abs(cast[a].age - cast[b].age) <= kind.maxAgeGap;
+        bool Fits(PastKind kind, int a, int b) => kind.maxAgeGap <= 0 || Mathf.Abs(Member(a).age - Member(b).age) <= kind.maxAgeGap;
+
+        CastMember Member(int index) => index < 0 ? playerMember : cast[index];
+
+        // 플레이어와 NPC 한 명의 가벼운 인연 (사용자 2026-11-26: 하나 이상, 짙은 원한은 NPC끼리만).
+        // 플레이어가 인연의 종류를 골랐으면(⑧) 그것으로, 안 골랐으면 생성기가 고른다.
+        Link? PickPlayerLink(System.Random rng, bool adjustAge)
+        {
+            if (playerMember == null || cast.Count == 0) return null;   // Link?: 값이 없을 수도 있는 struct (C라면 포인터 + NULL)
+            var kind = string.IsNullOrWhiteSpace(playerMember.bond) ? null : tables.lightPasts.Find(p => p.title == playerMember.bond);
+            var fitting = new List<int>();
+            for (int i = 0; i < cast.Count; i++) if (kind == null || Fits(kind, -1, i)) fitting.Add(i);
+            int b;
+            if (fitting.Count > 0) b = fitting[rng.Next(fitting.Count)];
+            else
+            {
+                // 동창처럼 나이가 맞아야 하는 인연인데 맞는 NPC가 없다. 생성 중이면 그 NPC의 나이를 플레이어에 맞춘다.
+                b = rng.Next(cast.Count);
+                if (adjustAge)
+                {
+                    int gap = kind.maxAgeGap;
+                    cast[b].age = Mathf.Clamp(playerMember.age + rng.Next(-gap, gap + 1), tables.ageRange.x, tables.ageRange.y);
+                }
+                else Debug.LogWarning($"[캐스트] '{kind.title}'에 나이가 맞는 프리셋 NPC가 없어 {cast[b].name}과(와) 그대로 씁니다.", this);
+            }
+            kind ??= Pick(tables.lightPasts, rng, p => Fits(p, -1, b));
+            return new Link { a = -1, b = b, heavy = false, kind = kind, yearsAgo = YearsAgo(kind, -1, b, rng) };
+        }
+
+        // 프리셋 시트를 복사해 재료로 바꾼다. 원본 에셋에 플레이어와의 과거를 적으면 에셋 파일이 바뀌어 버리므로 사본에 적는다.
+        List<NpcCharacterSheet> PresetMembers()
+        {
+            var copies = new List<NpcCharacterSheet>();
+            int count = Mathf.Min(npcs.Count, preset.sheets.Count);
+            for (int i = 0; i < count; i++)
+            {
+                if (preset.sheets[i] == null) continue;
+                var copy = Instantiate(preset.sheets[i]);
+                copy.name = preset.sheets[i].name;
+                copies.Add(copy);
+                var identity = npcs[i].GetComponent<CharacterIdentity>();
+                // 손으로 쓴 소개("54세 남자. 직업은 산장 관리인. …")에서 나이와 성별만 읽는다. 나머지는 글 그대로 LLM에 준다.
+                var m = new CastMember { brain = npcs[i], id = identity != null ? identity.Id : -1, name = copy.displayName, profileOverride = copy.publicProfile };
+                var age = System.Text.RegularExpressions.Regex.Match(copy.publicProfile ?? "", @"(\d+)세");
+                m.age = age.Success ? int.Parse(age.Groups[1].Value) : 40;
+                m.female = (copy.publicProfile ?? "").Contains("여자");
+                cast.Add(m);
+            }
+            return copies;
+        }
+
+        /// <summary>프리셋 NPC가 이미 맡은 이름과 직업. 메이킹 창의 보기에서 뺀다 (생성할 때는 NPC가 플레이어를 피하므로 빈다).</summary>
+        public void Taken(ICollection<string> names, ICollection<string> jobs)
+        {
+            if (!UsingPreset) return;
+            foreach (var s in preset.sheets)
+            {
+                if (s == null) continue;
+                names.Add(s.displayName);
+                foreach (var a in tables.adulthoods) if ((s.publicProfile ?? "").Contains($"직업은 {a.title}")) jobs.Add(a.title);
+            }
+        }
 
         // 언제 일어났나. LLM이 나이 계산을 자주 틀려서 코드가 정한다.
         // 보통: 1년 전부터 어린 쪽이 minAgeAtPast살이던 때까지. youth: 둘 다 10~18살이던 때.
         int YearsAgo(PastKind kind, int a, int b, System.Random rng)
         {
-            int younger = Mathf.Min(cast[a].age, cast[b].age), older = Mathf.Max(cast[a].age, cast[b].age);
+            int younger = Mathf.Min(Member(a).age, Member(b).age), older = Mathf.Max(Member(a).age, Member(b).age);
             if (kind.youth)
             {
                 int from = Mathf.Max(1, older - 18), to = younger - 10;   // 이 범위면 둘 다 10~18살
@@ -229,7 +338,7 @@ namespace Improv.Npc.Generation
         // #5. 시트로 묶기
         // =====================================================================
 
-        NpcCharacterSheet BuildSheet(CastMember m)
+        NpcCharacterSheet BuildSheet(CastMember m, bool includePlayer)
         {
             var sheet = ScriptableObject.CreateInstance<NpcCharacterSheet>();
             sheet.name = $"Generated_{m.name}";
@@ -248,30 +357,38 @@ namespace Improv.Npc.Generation
 
             sheet.baselineAttention = m.attention;
             sheet.beliefs.AddRange(m.beliefs);
+            AddPasts(sheet, m, includePlayer);
+            return sheet;
+        }
+
+        // 겹치는 과거 중 이 사람의 판본을 시트에 적는다.
+        // includePlayer가 false면 플레이어와의 과거는 뺀다 (프리셋으로 저장할 때: 다음 판의 플레이어는 다른 사람이다).
+        void AddPasts(NpcCharacterSheet sheet, CastMember m, bool includePlayer)
+        {
             foreach (var past in pasts)
             {
                 var mine = past.VersionOf(m);
                 if (mine == null) continue;
+                if (!includePlayer && (past.a.isPlayer || past.b.isPlayer)) continue;
                 // 규격 줄로 찍는다 (PastFormat). 긴 서술보다 주어와 사실이 덜 흔들린다 (사용자 결정 2026-11-25).
                 sheet.pasts.Add(PastFormat.Memory(past.Other(m).name, past.heavy, mine));
                 // 묵은 감정 (I-12). LLM이 숫자를 안 줬으면 짙음에 따라 코드가 채운다 [가정].
                 int affinity = mine.affinity >= 0 ? Mathf.Clamp(mine.affinity, 0, 100) : past.heavy ? 25 : 60;
                 sheet.oldFeelings.Add(new OldFeeling { name = past.Other(m).name, value = affinity, why = mine.feeling });
             }
-            return sheet;
         }
 
         // 미리 써 둔 판을 끼운다. 두뇌의 Start(첫 생각)보다 먼저 돈다 (DefaultExecutionOrder -50).
-        void ApplyPreset()
+        void ApplyPreset(List<NpcCharacterSheet> source)
         {
-            int count = Mathf.Min(npcs.Count, preset.sheets.Count);
-            if (preset.sheets.Count != npcs.Count)
-                Debug.LogWarning($"[캐스트] 프리셋의 시트 수({preset.sheets.Count})와 NPC 수({npcs.Count})가 다릅니다. 앞에서부터 {count}명만 끼웁니다.", this);
+            int count = Mathf.Min(npcs.Count, source.Count);
+            if (source.Count != npcs.Count)
+                Debug.LogWarning($"[캐스트] 프리셋의 시트 수({source.Count})와 NPC 수({npcs.Count})가 다릅니다. 앞에서부터 {count}명만 끼웁니다.", this);
             var sb = new StringBuilder();
-            sb.AppendLine($"[캐스트] 프리셋 '{preset.name}'을(를) 씁니다 (생성 안 함)");
+            sb.AppendLine($"[캐스트] 프리셋 '{preset.name}'을(를) 씁니다 (NPC는 생성 안 함)");
             for (int i = 0; i < count; i++)
             {
-                var sheet = preset.sheets[i];
+                var sheet = source[i];
                 if (sheet == null) continue;
                 sheets.Add(sheet);
                 npcs[i].ApplySheet(sheet);
@@ -284,8 +401,11 @@ namespace Improv.Npc.Generation
         void LogCast()
         {
             var sb = new StringBuilder($"[캐스트] 씨드 {UsedSeed}로 만든 사람들\n");
+            if (playerMember != null)
+                sb.AppendLine($"- 플레이어 {playerMember.name}: {string.Join(" ", PersonaDraft.Sentences(playerMember))} 지난 일 {playerMember.personal.Count}줄");
             foreach (var m in cast)
             {
+                if (m.adulthood == null) continue;   // 프리셋 NPC는 위의 프리셋 로그에 이미 찍었다
                 var traits = new List<string>();
                 foreach (var t in m.traits) traits.Add(t.name);
                 sb.AppendLine($"- {m.name}(id {m.id}) {m.age}세 {(m.female ? "여" : "남")}, {m.childhood.title} → {m.adulthood.title}, 성격 {string.Join("·", traits)}, 집중도 {m.attention:0.00}, 믿음: {string.Join(" / ", m.beliefs)}");
@@ -346,18 +466,20 @@ namespace Improv.Npc.Generation
         [ContextMenu("만든 판을 프리셋으로 저장")]
         void SavePreset()
         {
+            if (UsingPreset) { Debug.LogWarning("[캐스트] 프리셋으로 시작한 판은 다시 저장하지 않습니다.", this); return; }
             if (sheets.Count == 0 || pasts.Count == 0) { Debug.LogWarning("[캐스트] 아직 만든 판이 없습니다. 프리셋을 끄고 Play한 뒤, 생성이 끝나면 고르세요.", this); return; }
             const string parent = "Assets/Data/Characters";
             string folder = $"{parent}/Cast_{UsedSeed}";
             if (!UnityEditor.AssetDatabase.IsValidFolder(folder)) UnityEditor.AssetDatabase.CreateFolder(parent, $"Cast_{UsedSeed}");
             var saved = ScriptableObject.CreateInstance<CastPreset>();
-            foreach (var s in sheets)
+            // 플레이어와의 과거는 빼고 다시 묶는다. 다음 판의 플레이어는 다른 사람일 수 있다.
+            foreach (var m in cast)
             {
-                var copy = Instantiate(s);
-                UnityEditor.AssetDatabase.CreateAsset(copy, $"{folder}/{s.displayName}.asset");
+                var copy = BuildSheet(m, includePlayer: false);
+                UnityEditor.AssetDatabase.CreateAsset(copy, $"{folder}/{m.name}.asset");
                 saved.sheets.Add(copy);
             }
-            foreach (var p in pasts) saved.truths.Add(PastFormat.Truth(p));
+            foreach (var p in pasts) if (!p.a.isPlayer && !p.b.isPlayer) saved.truths.Add(PastFormat.Truth(p));
             UnityEditor.AssetDatabase.CreateAsset(saved, $"{folder}/CastPreset_{UsedSeed}.asset");
             UnityEditor.AssetDatabase.SaveAssets();
             Debug.Log($"[캐스트] 이 판을 {folder}에 프리셋으로 저장했습니다. CastGenerator의 preset 칸에 넣으면 다시 쓸 수 있습니다.", this);

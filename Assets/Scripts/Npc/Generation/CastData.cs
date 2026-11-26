@@ -24,6 +24,13 @@ namespace Improv.Npc.Generation
         public readonly List<Trait> traits = new();
         public readonly List<string> beliefs = new();
         public float attention;
+
+        // 캐릭터 메이킹(R-029)에서 채우는 것. 생성한 NPC는 비어 있다.
+        public bool isPlayer;
+        public string family = "";                          // 집에서의 자리 ("두 아이의 아버지")
+        public readonly List<PastEvent> personal = new();   // 개인 서사. 주어는 "나"
+        public string bond = "";                            // 산장의 누군가와 바라는 인연 (lightPasts title). 빈칸이면 생성기가 고른다
+        public string profileOverride;                      // 프리셋 NPC처럼 표 없이 시트 글만 있는 사람의 소개
     }
 
     /// <summary>두 사람이 함께 겪은 과거 하나. 진실 하나와 당사자 둘의 판본.</summary>

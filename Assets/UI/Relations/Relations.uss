@@ -79,3 +79,9 @@
     border-radius: 6px;
 }
 .arrow-label--dev { color: rgb(255, 190, 90); font-size: 13px; }
+
+/* '나' 칸 (R-028d): 내 캐릭터와 내 기억 */
+.header-buttons { flex-direction: row; }
+.me-button { font-size: 16px; color: rgb(255, 225, 120); background-color: rgba(255, 225, 120, 0.10); border-color: rgba(255, 225, 120, 0.4); margin-right: 6px; }
+.me-panel { flex-grow: 1; background-color: rgba(255, 255, 255, 0.03); border-radius: 8px; padding: 12px 16px; }
+.me-text { color: rgb(235, 238, 245); font-size: 18px; white-space: normal; }

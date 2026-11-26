@@ -8,7 +8,10 @@
         <ui:VisualElement class="relations-window">
             <ui:VisualElement class="relations-header">
                 <ui:Label class="relations-title" text="관계도" />
-                <ui:Button name="dev-button" class="dev-button" text="개발자 보기" />
+                <ui:VisualElement class="header-buttons">
+                    <ui:Button name="me-button" class="me-button" text="나" />
+                    <ui:Button name="dev-button" class="dev-button" text="개발자 보기" />
+                </ui:VisualElement>
             </ui:VisualElement>
             <ui:VisualElement class="relations-body">
                 <ui:VisualElement name="graph-area" class="graph-area" />
