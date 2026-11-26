@@ -24,6 +24,7 @@ namespace Improv.Npc.Generation
         public readonly List<Trait> traits = new();
         public readonly List<string> beliefs = new();
         public float attention;
+        public Improv.Characters.AbilityScores abilities;   // 능력치와 기능 (R-031). 시트에 그대로 옮긴다
 
         // 캐릭터 메이킹(R-029)에서 채우는 것. 생성한 NPC는 비어 있다.
         public bool isPlayer;

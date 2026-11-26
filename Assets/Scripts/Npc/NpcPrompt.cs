@@ -11,7 +11,7 @@ namespace Improv.Npc
     {
         public static string BuildSystem(NpcCharacterSheet sheet, string myName, string roomName, IReadOnlyList<string> visibleNames, IReadOnlyList<string> longTermNotes,
                                          float attention = 0.5f, string attentionLevel = "보통", IReadOnlyList<string> feelings = null,
-                                         string actionContext = null, string relationText = null)
+                                         string actionContext = null, string relationText = null, string abilityText = null)
         {
             var sb = new StringBuilder();
             // 이름은 시트가 아니라 지금 이름을 쓴다. 개명하면 바뀐다 (F-17). 시트의 이름은 처음 이름일 뿐이다.
@@ -67,6 +67,14 @@ namespace Improv.Npc
                 sb.AppendLine("사람에 대한 네 마음 (0~100, 50이 보통. 호감 = 좋고 싫음. 애정 = 본능적으로 끌림, 그 사람의 면모를 알수록 찍힌다):");
                 sb.Append(relationText);
                 sb.AppendLine("이 마음이 말과 태도에 묻어난다. 묵은 감정은 쉽게 안 바뀌고, 뒤에 붙은 것은 방금까지 있었던 일이다.");
+                sb.AppendLine();
+            }
+            // R-031: 능력치와 기능은 숫자로 넘긴다(사용자 2026-11-25). 성공·실패를 코드가 굴리지 않는다. 할 만한지, 얼마나 자신 있게 나설지는 LLM이 이 숫자로 고른다 (R-016b).
+            if (!string.IsNullOrEmpty(abilityText))
+            {
+                sb.AppendLine("네 능력 (10이 보통 사람. 기능은 0~10, 없으면 익히지 않은 것):");
+                sb.AppendLine(abilityText);
+                sb.AppendLine("무엇을 할 수 있을지, 얼마나 자신 있게 나설지 이 숫자로 판단한다. 익히지 않은 일은 서툴고, 괄호 속 까닭(다침, 병)은 지금 몸이 그렇다는 뜻이다.");
                 sb.AppendLine();
             }
             // T-6: 할 수 있는 행동과, 행동에 쓸 수 있는 대상(인지한 것만, P-3).

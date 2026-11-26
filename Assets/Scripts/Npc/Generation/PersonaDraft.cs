@@ -56,6 +56,8 @@ namespace Improv.Npc.Generation
         public string[] beliefs = new string[0];
         public PersonalLine[] personal = new PersonalLine[0];
         public string bond = "";              // ⑧ 산장의 누군가와의 인연. CharacterTables.lightPasts의 title, 빈칸이면 생성기가 고른다
+        // ⑨ 능력치와 기능 (R-031c). [NonSerialized]: JSON으로 LLM에 보내지 않는다(빈칸 채우기는 글 칸만). set이 꺼져 있으면 시작할 때 주사위로.
+        [NonSerialized] public Improv.Characters.AbilityScores abilities = new();
 
         public const string Male = "남자", Female = "여자";
         public bool IsFemale => gender == Female;
@@ -73,6 +75,8 @@ namespace Improv.Npc.Generation
                 line.when ??= ""; line.where ??= "";
                 line.what ??= new TemplatePick(); line.how ??= new TemplatePick(); line.why ??= new TemplatePick();
             }
+            abilities ??= new Improv.Characters.AbilityScores();
+            abilities.EnsureShape();
             name ??= ""; gender ??= ""; childhood ??= ""; adulthood ??= ""; family ??= ""; arrival ??= ""; bond ??= "";
         }
 
@@ -100,6 +104,7 @@ namespace Improv.Npc.Generation
                 bond = bond,
                 isPlayer = true,
                 attention = 0.3f,
+                abilities = abilities.Clone(),
             };
             foreach (string t in traits)
             {

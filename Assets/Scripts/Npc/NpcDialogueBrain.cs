@@ -59,6 +59,7 @@ namespace Improv.Npc
         CharacterAnimator characterAnimator;   // 없어도 된다. 있으면 LLM이 고를 때 돌아볼 수 있다
         Improv.Characters.Sight.Vision vision;  // 없어도 된다. 있으면 지금 보이는 사람을 프롬프트에 넣는다 (P-3)
         NpcAttention attention;                 // 없어도 된다. 있으면 집중도에 따라 생각하는 노력을 바꾼다 (T-5)
+        CharacterAbilities abilities;           // 없어도 된다. 있으면 능력치를 숫자로 프롬프트에 넣는다 (R-031)
         CharacterVitals vitals;                 // 없어도 된다. 있으면 몸 상태를 느낌으로 프롬프트에 넣고, 죽으면 멈춘다 (R-020)
         readonly List<string> feelings = new();
         NpcActions actions;                     // 없어도 된다. 있으면 LLM이 고른 행동(가기, 줍기, 먹기 등)을 한다 (T-6)
@@ -134,6 +135,7 @@ namespace Improv.Npc
             vision = GetComponent<Improv.Characters.Sight.Vision>();
             attention = GetComponent<NpcAttention>();
             vitals = GetComponent<CharacterVitals>();
+            abilities = GetComponent<CharacterAbilities>();
             actions = GetComponent<NpcActions>();
             sleep = GetComponent<CharacterSleep>();
 
@@ -351,7 +353,7 @@ namespace Improv.Npc
                     string attentionLevel = attention != null ? attention.LevelName : "보통";
                     if (vitals != null) vitals.DescribeFeelings(feelings); else feelings.Clear();
                     string actionContext = actions != null ? actions.DescribeForPrompt() : null;
-                    var messages = new List<ChatMessage> { ChatMessage.System(NpcPrompt.BuildSystem(sheet, speaker.DisplayName, room, VisibleNames(), longTerm, attentionValue, attentionLevel, feelings, actionContext, DescribeRelations())) };
+                    var messages = new List<ChatMessage> { ChatMessage.System(NpcPrompt.BuildSystem(sheet, speaker.DisplayName, room, VisibleNames(), longTerm, attentionValue, attentionLevel, feelings, actionContext, DescribeRelations(), abilities != null ? abilities.Describe() : null)) };
                     // T-5: 집중도가 낮으면 최근 몇 줄만 떠올린다. 들은 말 자체는 단기 기억에 그대로 있다(흐려지지 않음).
                     int lines = attention != null ? attention.HistoryLines(shortTerm.Count) : shortTerm.Count;
                     for (int i = shortTerm.Count - lines; i < shortTerm.Count; i++) messages.Add(shortTerm[i].message);

@@ -1,0 +1,59 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d962010dd3cd4264489f5bb81944165c, type: 3}
+  m_Name: AbilityRules
+  m_EditorClassIdentifier: Assembly-CSharp::Improv.Characters.AbilityRules
+  skills:
+  - name: "\uC6B4\uBC18"
+    ability: 0
+    require: 0
+    usedBy: "\uB4E4\uACE0 \uAC77\uB294 \uC18D\uB3C4\uC640 \uC2A4\uD14C\uBBF8\uB108
+      (R-008)"
+  - name: "\uACA9\uD22C"
+    ability: 0
+    require: 0
+    usedBy: 
+  - name: "\uC190\uC7AC\uC8FC"
+    ability: 1
+    require: 0
+    usedBy: 
+  - name: "\uC740\uC2E0"
+    ability: 1
+    require: 0
+    usedBy: 
+  - name: "\uC758\uD559"
+    ability: 2
+    require: 8
+    usedBy: 
+  - name: "\uCD94\uB9AC"
+    ability: 2
+    require: 0
+    usedBy: 
+  - name: "\uC678\uAD6D\uC5B4"
+    ability: 2
+    require: 7
+    usedBy: 
+  - name: "\uAD00\uCC30"
+    ability: 3
+    require: 0
+    usedBy: "\uC2DC\uC57C \uAC70\uB9AC (R-011)"
+  - name: "\uC694\uB9AC"
+    ability: 3
+    require: 0
+    usedBy: 
+  pointsPerSkillPoint: 2
+  capDivisor: 3
+  abilityRange: {x: 1, y: 30}
+  functionalBudget: 40
+  stateBudget: 30
+  makingRange: {x: 4, y: 16}
+  spread: 2

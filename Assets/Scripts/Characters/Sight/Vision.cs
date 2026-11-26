@@ -24,6 +24,10 @@ namespace Improv.Characters.Sight
         [SerializeField] float backRadius = 0.6f;        // 등 뒤에서도 보이는 거리 (유닛). R-011a "뒤통수 정도" [가정]
         [SerializeField] float eyeHeight = 1.5f;         // 발에서 눈까지
 
+        [Header("능력치 (R-031a, O-018 [가정]). 시야 거리는 보통 사람(감각 10, 관찰 0) 기준이다")]
+        [SerializeField] float sensesPerPoint = 0.03f;   // 감각 1점마다 시야 거리 배율
+        [SerializeField] float observePerLevel = 0.04f;  // 관찰 기능 1마다
+
         [Header("멀리 보기 (R-004, O-003 [가정])")]
         [SerializeField] float zoomDistanceMultiplier = 1.5f;   // 멀리 볼 때 시야 거리 배율
         [SerializeField] float zoomFovMultiplier = 0.5f;        // 멀리 볼 때 시야각 배율 (망원경처럼 좁아진다)
@@ -41,6 +45,7 @@ namespace Improv.Characters.Sight
         CharacterMotor motor;
         CharacterAnimator characterAnimator;   // 바라볼 곳이 없을 때는 몸이 향한 쪽을 본다
         SightTarget self;                      // 내 몸은 내가 가리지도, 내 목록에 들지도 않는다
+        CharacterAbilities abilities;          // 없으면 보통 사람
 
         float gazeAngle;          // 지금 시선 각도 (도). 0 = 오른쪽, 90 = 위, 180 = 왼쪽
         Vector2? lookTarget;      // 바라볼 곳. Vector2? 는 "값이 없을 수도 있는 Vector2" (C로 치면 bool has + 값 한 쌍)
@@ -55,7 +60,8 @@ namespace Improv.Characters.Sight
         public float GazeAngle => gazeAngle;
         public bool HasLookTarget => lookTarget.HasValue;
         public bool IsZoomed => zoomed;
-        public float ViewDistance => viewDistance * (zoomed ? zoomDistanceMultiplier : 1f);
+        public float ViewDistance => viewDistance * SightFactor * (zoomed ? zoomDistanceMultiplier : 1f);
+        float SightFactor => abilities != null ? abilities.Factor(Ability.Senses, sensesPerPoint, "관찰", observePerLevel, 0.5f, 1.6f) : 1f;
         public float FieldOfView => fieldOfView * (zoomed ? zoomFovMultiplier : 1f);
         public float BackRadius => backRadius;
         public bool EyesClosed => eyesClosed;
@@ -68,6 +74,7 @@ namespace Improv.Characters.Sight
         {
             motor = GetComponent<CharacterMotor>();
             characterAnimator = GetComponent<CharacterAnimator>();
+            abilities = GetComponent<CharacterAbilities>();
             self = GetComponent<SightTarget>();
             solidOnly = ContactFilter2D.noFilter;
             solidOnly.useTriggers = false;   // 문 클릭 영역 같은 트리거는 눈을 막지 않는다

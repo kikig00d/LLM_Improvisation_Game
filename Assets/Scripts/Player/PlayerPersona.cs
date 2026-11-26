@@ -35,6 +35,8 @@ namespace Improv.Player
         {
             Member = member;
             identity.Rename(member.name);
+            var body = GetComponent<CharacterAbilities>();
+            if (body != null && member.abilities != null) body.Apply(member.abilities);   // ⑨ (R-031c)
             Confirmed?.Invoke();
         }
 

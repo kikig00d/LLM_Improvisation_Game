@@ -165,6 +165,8 @@ namespace Improv.UI
             if (persona == null || !persona.Ready) { meText.text = "아직 만든 캐릭터가 없습니다 (메이킹을 끈 판)."; return; }
             var sb = new System.Text.StringBuilder();
             foreach (string line in PersonaDraft.Sentences(persona.Member)) sb.AppendLine(line);
+            var body = persona.GetComponent<CharacterAbilities>();
+            if (body != null) sb.AppendLine().AppendLine(body.Describe());   // ⑨ (R-031). 다치거나 알으면 괄호에 까닭이 붙는다
             if (persona.Member.personal.Count > 0)
             {
                 sb.AppendLine().AppendLine("지난 일");

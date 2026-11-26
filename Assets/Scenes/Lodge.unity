@@ -5180,6 +5180,7 @@ GameObject:
   - component: {fileID: 285436550}
   - component: {fileID: 285436552}
   - component: {fileID: 285436551}
+  - component: {fileID: 285436553}
   m_Layer: 9
   m_Name: Npc_SeoMira
   m_TagString: Untagged
@@ -5216,6 +5217,8 @@ MonoBehaviour:
   turnSpeed: 180
   backRadius: 0.6
   eyeHeight: 1.5
+  sensesPerPoint: 0.03
+  observePerLevel: 0.04
   zoomDistanceMultiplier: 1.5
   zoomFovMultiplier: 0.5
   minOccluderHeight: 0.5
@@ -5501,6 +5504,11 @@ MonoBehaviour:
   staminaRestGain: 0.3
   staminaSleepGain: 1.5
   carryCostMultiplier: 2
+  carrySpeedMultiplier: 0.75
+  endurancePerPoint: 0.04
+  healthPerPoint: 0.05
+  carryStrengthPerPoint: 0.05
+  carrySkillPerLevel: 0.1
   damagePerEmptyBarPerDay: 40
   healthyThreshold: 30
   healthRegenPerDay: 10
@@ -5542,6 +5550,24 @@ MonoBehaviour:
   giveUpAfter: 3
   doorProbeDistance: 1
   portalUseDistance: 0.6
+--- !u!114 &285436553
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 285436534}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e35a39fcc0fbed541b86e61b3ebf1936, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Improv.Characters.CharacterAbilities
+  rules: {fileID: 11400000, guid: 6bdc1803c523f2943b3b4429314d615a, type: 2}
+  baseScores:
+    set: 0
+    values: 0a0000000a0000000a0000000a0000000a0000000a0000000a000000
+    skills: []
+  modifiers: []
 --- !u!1 &288491801
 GameObject:
   m_ObjectHideFlags: 0
@@ -35000,6 +35026,7 @@ GameObject:
   - component: {fileID: 1235027967}
   - component: {fileID: 1235027969}
   - component: {fileID: 1235027968}
+  - component: {fileID: 1235027970}
   m_Layer: 9
   m_Name: Npc_ParkGunwoo
   m_TagString: Untagged
@@ -35036,6 +35063,8 @@ MonoBehaviour:
   turnSpeed: 180
   backRadius: 0.6
   eyeHeight: 1.5
+  sensesPerPoint: 0.03
+  observePerLevel: 0.04
   zoomDistanceMultiplier: 1.5
   zoomFovMultiplier: 0.5
   minOccluderHeight: 0.5
@@ -35321,6 +35350,11 @@ MonoBehaviour:
   staminaRestGain: 0.3
   staminaSleepGain: 1.5
   carryCostMultiplier: 2
+  carrySpeedMultiplier: 0.75
+  endurancePerPoint: 0.04
+  healthPerPoint: 0.05
+  carryStrengthPerPoint: 0.05
+  carrySkillPerLevel: 0.1
   damagePerEmptyBarPerDay: 40
   healthyThreshold: 30
   healthRegenPerDay: 10
@@ -35362,6 +35396,24 @@ MonoBehaviour:
   giveUpAfter: 3
   doorProbeDistance: 1
   portalUseDistance: 0.6
+--- !u!114 &1235027970
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1235027951}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e35a39fcc0fbed541b86e61b3ebf1936, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Improv.Characters.CharacterAbilities
+  rules: {fileID: 11400000, guid: 6bdc1803c523f2943b3b4429314d615a, type: 2}
+  baseScores:
+    set: 0
+    values: 0a0000000a0000000a0000000a0000000a0000000a0000000a000000
+    skills: []
+  modifiers: []
 --- !u!1 &1246059759
 GameObject:
   m_ObjectHideFlags: 0
@@ -40280,6 +40332,7 @@ GameObject:
   - component: {fileID: 1577261671}
   - component: {fileID: 1577261670}
   - component: {fileID: 1577261672}
+  - component: {fileID: 1577261673}
   m_Layer: 9
   m_Name: Player
   m_TagString: Untagged
@@ -40565,6 +40618,8 @@ MonoBehaviour:
   turnSpeed: 180
   backRadius: 0.6
   eyeHeight: 1.5
+  sensesPerPoint: 0.03
+  observePerLevel: 0.04
   zoomDistanceMultiplier: 1.5
   zoomFovMultiplier: 0.5
   minOccluderHeight: 0.5
@@ -40671,6 +40726,11 @@ MonoBehaviour:
   staminaRestGain: 0.3
   staminaSleepGain: 1.5
   carryCostMultiplier: 2
+  carrySpeedMultiplier: 0.75
+  endurancePerPoint: 0.04
+  healthPerPoint: 0.05
+  carryStrengthPerPoint: 0.05
+  carrySkillPerLevel: 0.1
   damagePerEmptyBarPerDay: 40
   healthyThreshold: 30
   healthRegenPerDay: 10
@@ -40716,6 +40776,24 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 88a1bdee1936d5a4ebbadd17f5290b7b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Improv.Player.PlayerPersona
+--- !u!114 &1577261673
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1577261648}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e35a39fcc0fbed541b86e61b3ebf1936, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Improv.Characters.CharacterAbilities
+  rules: {fileID: 11400000, guid: 6bdc1803c523f2943b3b4429314d615a, type: 2}
+  baseScores:
+    set: 0
+    values: 0a0000000a0000000a0000000a0000000a0000000a0000000a000000
+    skills: []
+  modifiers: []
 --- !u!1 &1578874500
 GameObject:
   m_ObjectHideFlags: 0
@@ -46332,6 +46410,7 @@ GameObject:
   - component: {fileID: 1931264176}
   - component: {fileID: 1931264178}
   - component: {fileID: 1931264177}
+  - component: {fileID: 1931264179}
   m_Layer: 9
   m_Name: Npc_HanDoyun
   m_TagString: Untagged
@@ -46585,6 +46664,8 @@ MonoBehaviour:
   turnSpeed: 180
   backRadius: 0.6
   eyeHeight: 1.5
+  sensesPerPoint: 0.03
+  observePerLevel: 0.04
   zoomDistanceMultiplier: 1.5
   zoomFovMultiplier: 0.5
   minOccluderHeight: 0.5
@@ -46653,6 +46734,11 @@ MonoBehaviour:
   staminaRestGain: 0.3
   staminaSleepGain: 1.5
   carryCostMultiplier: 2
+  carrySpeedMultiplier: 0.75
+  endurancePerPoint: 0.04
+  healthPerPoint: 0.05
+  carryStrengthPerPoint: 0.05
+  carrySkillPerLevel: 0.1
   damagePerEmptyBarPerDay: 40
   healthyThreshold: 30
   healthRegenPerDay: 10
@@ -46694,6 +46780,24 @@ MonoBehaviour:
   giveUpAfter: 3
   doorProbeDistance: 1
   portalUseDistance: 0.6
+--- !u!114 &1931264179
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1931264160}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e35a39fcc0fbed541b86e61b3ebf1936, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Improv.Characters.CharacterAbilities
+  rules: {fileID: 11400000, guid: 6bdc1803c523f2943b3b4429314d615a, type: 2}
+  baseScores:
+    set: 0
+    values: 0a0000000a0000000a0000000a0000000a0000000a0000000a000000
+    skills: []
+  modifiers: []
 --- !u!1 &1935995339
 GameObject:
   m_ObjectHideFlags: 0
