@@ -26,6 +26,8 @@ namespace Improv.Npc.Generation
         public int beliefsPerCharacter = 2;
         public List<PastKind> heavyPasts = new();   // 김전일식 극단적 갈등 (GDD 3장 4번)
         public List<PastKind> lightPasts = new();   // 가벼운 인연
+        [Tooltip("능력치·기능 규칙 (R-031). 배경의 보정과 기능 이름은 이 규칙의 목록을 따른다")]
+        public Improv.Characters.AbilityRules abilityRules;
     }
 
     // 아래는 표의 한 줄들. MonoBehaviour가 아닌 일반 클래스라 한 파일에 둔다.
@@ -48,6 +50,10 @@ namespace Improv.Npc.Generation
         public bool unique;
         [Tooltip("비어 있지 않으면 산장에 온 이유가 이것으로 정해진다")]
         public string fixedArrival;
+        [Tooltip("이 배경이 주는 능력치 보정 (R-031b). 예) 운동선수: 근력 +3, 체력 +2")]
+        public List<Improv.Characters.AbilityBonus> abilityBonus = new();
+        [Tooltip("이 배경이 잘하는 기능. 생성기와 주사위가 기능 점수를 여기부터 쓴다")]
+        public List<string> skills = new();
     }
 
     [Serializable]

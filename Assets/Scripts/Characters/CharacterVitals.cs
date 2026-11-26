@@ -35,6 +35,14 @@ namespace Improv.Characters
         [SerializeField] float staminaSleepGain = 1.5f;    // 자는 동안 차는 양
         [Tooltip("무언가를 들고 걸으면 이 배수만큼 더 빨리 준다 (R-008). 들고 서 있으면 차지 않는다.")]
         [SerializeField] float carryCostMultiplier = 2f;
+        [Tooltip("무언가를 들고 걸을 때 보통 사람(근력 10, 운반 0)의 속도 배율 (R-008)")]
+        [SerializeField] float carrySpeedMultiplier = 0.75f;
+
+        [Header("능력치의 효과 (R-031a, O-018 [가정]). 보통(10)에서 1점마다")]
+        [SerializeField] float endurancePerPoint = 0.04f;   // 체력: 스테미너가 덜 줄고 더 빨리 찬다
+        [SerializeField] float healthPerPoint = 0.05f;      // 건강: 빈 바의 피해를 덜 받고 더 빨리 회복한다
+        [SerializeField] float carryStrengthPerPoint = 0.05f;   // 근력: 들고 걸을 때 더 빠르고 덜 지친다
+        [SerializeField] float carrySkillPerLevel = 0.1f;       // 운반 기능 1마다
 
         [Header("건강")]
         [Tooltip("0인 하위 바 하나당 게임 하루에 줄어드는 건강")]
@@ -60,6 +68,7 @@ namespace Improv.Characters
         CharacterMotor motor;
         CharacterInteractor interactor;   // 없어도 된다. 있으면 들고 있는지 본다
         CharacterSleep sleep;             // 없어도 된다. 있으면 자는지 본다
+        CharacterAbilities abilities;     // 없어도 된다. 없으면 보통 사람(모두 10)으로 본다
 
         public float Health { get; private set; }
         public float Hunger { get; private set; }
@@ -80,6 +89,7 @@ namespace Improv.Characters
             motor = GetComponent<CharacterMotor>();
             interactor = GetComponent<CharacterInteractor>();
             sleep = GetComponent<CharacterSleep>();
+            abilities = GetComponent<CharacterAbilities>();
             Health = startHealth;
             Hunger = startHunger;
             Stamina = startStamina;
@@ -101,20 +111,33 @@ namespace Improv.Characters
             bool carrying = interactor != null && interactor.Held != null;
             bool asleep = sleep != null && sleep.IsAsleep;
             bool walking = !asleep && motor.Velocity.magnitude > WalkSpeedThreshold;
+            // R-031a: 체력이 높으면 덜 지치고 빨리 찬다. 근력·운반이 높으면 들고 걸어도 덜 지치고 덜 느려진다.
+            // 늘리는 것은 × (1 + 보너스), 줄이는 것은 × (1 − 보너스) (크킹 3식, 사용자 2026-11-26)
+            float endurance = AbilityFactor(Ability.Endurance, endurancePerPoint);
+            float enduranceCost = AbilityCost(Ability.Endurance, endurancePerPoint);
+            float carryAbility = abilities != null ? abilities.Factor(Ability.Strength, carryStrengthPerPoint, "운반", carrySkillPerLevel) : 1f;
+            float carryExtra = abilities != null ? abilities.CostFactor(Ability.Strength, carryStrengthPerPoint, "운반", carrySkillPerLevel) : 1f;
+            float carryCost = 1f + (carryCostMultiplier - 1f) * carryExtra;   // 보통 2배, 장사는 1.5배쯤
+            motor.SpeedMultiplier = carrying ? Mathf.Clamp(carrySpeedMultiplier * carryAbility, 0.3f, 1f) : 1f;
             float staminaRate;
-            if (asleep) staminaRate = staminaSleepGain;
-            else if (walking) staminaRate = -staminaWalkCost * (carrying ? carryCostMultiplier : 1f);
-            else staminaRate = carrying ? 0f : staminaRestGain;
+            if (asleep) staminaRate = staminaSleepGain * endurance;
+            else if (walking) staminaRate = -staminaWalkCost * (carrying ? carryCost : 1f) * enduranceCost;
+            else staminaRate = carrying ? 0f : staminaRestGain * endurance;
             Stamina = Mathf.Clamp(Stamina + staminaRate * dt, 0f, Max);
 
             // 건강: 빈 하위 바(0)가 있으면 줄고, 모두 넉넉하면 회복한다
             int emptyBars = (Hunger <= 0f ? 1 : 0) + (Stamina <= 0f ? 1 : 0) + (Temperature <= 0f ? 1 : 0);
             bool healthy = Hunger > healthyThreshold && Stamina > healthyThreshold && Temperature > healthyThreshold;
-            float healthRate = -emptyBars * damagePerEmptyBarPerDay + (healthy ? healthRegenPerDay : 0f);
+            float constitution = AbilityFactor(Ability.Health, healthPerPoint);
+            float constitutionCost = AbilityCost(Ability.Health, healthPerPoint);   // 건장한 노인은 굶어도 덜 상한다
+            float healthRate = -emptyBars * damagePerEmptyBarPerDay * constitutionCost + (healthy ? healthRegenPerDay * constitution : 0f);
             Health = Mathf.Clamp(Health + healthRate / day * dt, 0f, Max);
 
             if (Health <= 0f) Die();
         }
+
+        float AbilityFactor(Ability a, float perPoint) => abilities != null ? abilities.Factor(a, perPoint) : 1f;
+        float AbilityCost(Ability a, float perPoint) => abilities != null ? abilities.CostFactor(a, perPoint) : 1f;
 
         // =====================================================================
         // #4. 바꾸기

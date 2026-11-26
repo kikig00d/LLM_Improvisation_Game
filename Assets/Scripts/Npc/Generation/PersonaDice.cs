@@ -87,6 +87,39 @@ namespace Improv.Npc.Generation
             }
         }
 
+        /// <summary>
+        /// ⑨ 능력치와 기능 (R-031c). 모두 보통(10)에서 시작해 일곱 능력치 사이에서 점수를 무작위로 옮긴다(합은 그대로, 기능·상태가 한 주머니). 직업이 보정하는 능력치가 더 자주 받는다.
+        /// 그다음 기능 점수를 직업의 기능부터 쓴다. NPC 생성(AbilityRules.Roll)과 같은 결을 메이킹 예산 안에서 낸다.
+        /// </summary>
+        public static void Abilities(PersonaDraft d, CharacterTables t, Random rng)
+        {
+            var rules = t.abilityRules;
+            if (rules == null) return;
+            var s = new Improv.Characters.AbilityScores { set = true };
+            var job = t.adulthoods.Find(a => a.title == d.adulthood);
+            var young = t.childhoods.Find(a => a.title == d.childhood);
+            var favored = new List<int>();
+            foreach (var bg in new[] { job, young })
+                if (bg != null) foreach (var b in bg.abilityBonus) if (b.value > 0) favored.Add((int)b.ability);
+            Shuffle(s, 0, Improv.Characters.AbilityNames.Count, 12, favored, rules, rng);
+            rules.SpendSkills(s, rng, job != null ? job.skills : null);
+            d.abilities = s;
+        }
+
+        // from~to 사이 능력치끼리 점수를 times번 옮긴다. 받는 쪽은 favored가 두 배로 잘 뽑힌다.
+        static void Shuffle(Improv.Characters.AbilityScores s, int from, int to, int times, List<int> favored, Improv.Characters.AbilityRules rules, Random rng)
+        {
+            var pool = new List<int>();
+            for (int i = from; i < to; i++) { pool.Add(i); if (favored.Contains(i)) pool.Add(i); }
+            for (int k = 0; k < times; k++)
+            {
+                int up = pool[rng.Next(pool.Count)], down = from + rng.Next(to - from);
+                if (up == down || s.values[up] >= rules.makingRange.y || s.values[down] <= rules.makingRange.x) continue;
+                s.values[up]++;
+                s.values[down]--;
+            }
+        }
+
         /// <summary>답안지 전체를 새로 굴린다 ("모두 무작위").</summary>
         public static void All(PersonaDraft d, CharacterTables t, MakingTemplates m, ICollection<string> takenNames, ICollection<string> takenJobs, Random rng)
         {
@@ -109,6 +142,7 @@ namespace Improv.Npc.Generation
                 if (i < lines) Line(d.personal[i], m, rng);
             }
             d.bond = "";
+            Abilities(d, t, rng);
         }
 
         /// <summary>꼭 있어야 하는 칸 중 빈 것만 굴린다. 시작할 때 부른다. 개인 서사와 인연은 비워도 된다.</summary>
@@ -123,6 +157,7 @@ namespace Improv.Npc.Generation
             if (d.arrival == "") Arrival(d, t, rng);
             for (int i = 0; i < d.traits.Length; i++) if (d.traits[i] == "") Trait(d, t, i, rng);
             for (int i = 0; i < d.beliefs.Length; i++) if (d.beliefs[i] == "") Belief(d, t, i, rng);
+            if (!d.abilities.set) Abilities(d, t, rng);   // 직업을 정한 뒤에 굴려야 직업 보정이 붙는다
         }
 
         // 지금 값과 다른 것을 고른다. 주사위를 눌렀는데 그대로면 고장 난 것처럼 보인다.

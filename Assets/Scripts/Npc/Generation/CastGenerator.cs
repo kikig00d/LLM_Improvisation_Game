@@ -111,7 +111,7 @@ namespace Improv.Npc.Generation
         async Awaitable Start()
         {
             if (!enabled) return;
-            if (UsingPreset && !Making) { ApplyPreset(preset.sheets); return; }
+            if (UsingPreset && !Making) { ApplyPreset(preset.sheets, new System.Random(seed != 0 ? seed : Environment.TickCount)); return; }
             int resumeStep = PauseClock();
             try
             {
@@ -150,7 +150,7 @@ namespace Improv.Npc.Generation
                 if (presetCopies != null)
                 {
                     for (int i = 0; i < cast.Count; i++) AddPasts(presetCopies[i], cast[i], includePlayer: true);
-                    ApplyPreset(presetCopies);
+                    ApplyPreset(presetCopies, rng);
                 }
                 else
                     foreach (var m in cast)
@@ -158,6 +158,7 @@ namespace Improv.Npc.Generation
                         var sheet = BuildSheet(m, includePlayer: true);
                         sheets.Add(sheet);
                         m.brain.ApplySheet(sheet);
+                        ApplyAbilities(m.brain, m.abilities);
                     }
                 // 플레이어 몫의 판본은 플레이어만 안다. 관계도 창의 '나' 칸에서 읽는다.
                 foreach (var p in pasts)
@@ -229,6 +230,7 @@ namespace Improv.Npc.Generation
                 float attention = 0.3f;
                 foreach (var t in m.traits) attention += t.attention;
                 m.attention = Mathf.Clamp(attention, 0.05f, 0.95f);
+                m.abilities = RollAbilities(rng, m.childhood, m.adulthood);
                 cast.Add(m);
             }
         }
@@ -356,6 +358,7 @@ namespace Improv.Npc.Generation
             sheet.speechStyle = speech.ToString();
 
             sheet.baselineAttention = m.attention;
+            if (m.abilities != null) sheet.abilities = m.abilities.Clone();
             sheet.beliefs.AddRange(m.beliefs);
             AddPasts(sheet, m, includePlayer);
             return sheet;
@@ -379,7 +382,7 @@ namespace Improv.Npc.Generation
         }
 
         // 미리 써 둔 판을 끼운다. 두뇌의 Start(첫 생각)보다 먼저 돈다 (DefaultExecutionOrder -50).
-        void ApplyPreset(List<NpcCharacterSheet> source)
+        void ApplyPreset(List<NpcCharacterSheet> source, System.Random rng)
         {
             int count = Mathf.Min(npcs.Count, source.Count);
             if (source.Count != npcs.Count)
@@ -392,10 +395,34 @@ namespace Improv.Npc.Generation
                 if (sheet == null) continue;
                 sheets.Add(sheet);
                 npcs[i].ApplySheet(sheet);
+                // 능력치를 안 적은 옛 프리셋은 소개 글의 직업으로 굴린다. 원본 에셋에 적지 않고 몸에만 넣는다.
+                var scores = sheet.abilities != null && sheet.abilities.set ? sheet.abilities : RollAbilities(rng, null, JobOf(sheet.publicProfile));
+                ApplyAbilities(npcs[i], scores);
                 sb.AppendLine($"- {npcs[i].name} ← {sheet.displayName}: {sheet.publicProfile}");
             }
             foreach (string truth in preset.truths) sb.AppendLine($"* 진실: {truth}");
             Debug.Log(sb.ToString(), this);
+        }
+
+        // =====================================================================
+        // #5-1. 능력치 (R-031b)
+        // =====================================================================
+
+        AbilityScores RollAbilities(System.Random rng, Background childhood, Background adulthood)
+        {
+            if (tables.abilityRules == null) return null;
+            var bonuses = new List<AbilityBonus>();
+            if (childhood != null) bonuses.AddRange(childhood.abilityBonus);
+            if (adulthood != null) bonuses.AddRange(adulthood.abilityBonus);
+            return tables.abilityRules.Roll(rng, bonuses, adulthood != null ? adulthood.skills : null);
+        }
+
+        Background JobOf(string profile) => tables.adulthoods.Find(a => (profile ?? "").Contains($"직업은 {a.title}"));
+
+        static void ApplyAbilities(NpcDialogueBrain brain, AbilityScores scores)
+        {
+            var body = brain.GetComponent<CharacterAbilities>();
+            if (body != null && scores != null) body.Apply(scores);
         }
 
         void LogCast()
@@ -409,6 +436,8 @@ namespace Improv.Npc.Generation
                 var traits = new List<string>();
                 foreach (var t in m.traits) traits.Add(t.name);
                 sb.AppendLine($"- {m.name}(id {m.id}) {m.age}세 {(m.female ? "여" : "남")}, {m.childhood.title} → {m.adulthood.title}, 성격 {string.Join("·", traits)}, 집중도 {m.attention:0.00}, 믿음: {string.Join(" / ", m.beliefs)}");
+                var body = m.brain != null ? m.brain.GetComponent<CharacterAbilities>() : null;
+                if (body != null) sb.AppendLine("  " + body.Describe().Replace("\n", " / "));
             }
             foreach (var p in pasts)
             {

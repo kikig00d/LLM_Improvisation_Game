@@ -232,10 +232,71 @@ namespace Improv.UI
             Text(r, "이다.");
             Dice(r, () => PersonaDice.Bond(draft, tables, rng));
 
+            AddAbilities();
+
             Section("개인 서사 (비워도 된다)");
             for (int i = 0; i < draft.personal.Length; i++) AddLine(i);
 
             form.schedule.Execute(() => form.scrollOffset = new Vector2(0, scroll));   // 다시 그려도 보던 자리를 지킨다
+        }
+
+        // ⑨ 능력치와 기능 (R-031c). 정해진 합 안에서 +/-로 옮긴다. 기능 점수는 그 계열 능력치에서 나온다 (마운트 앤 블레이드 1편식).
+        void AddAbilities()
+        {
+            var rules = tables.abilityRules;
+            if (rules == null) return;
+            var s = draft.abilities;
+            s.EnsureShape();
+            Section("능력치와 기능 (10이 보통 사람)");
+            // 기능·상태 능력치가 한 주머니를 같이 쓴다 (사용자 2026-11-26, '병약한 천재')
+            int sum = 0;
+            for (int i = 0; i < AbilityNames.Count; i++) sum += s.values[i];
+            int left = rules.budget - sum;
+            AbilityGroup(rules, s, 0, AbilityNames.FunctionalCount, left, "기능 능력치: 힘으로 문 열기, 글 읽기 같은 판정에 쓴다", true);
+            AbilityGroup(rules, s, AbilityNames.FunctionalCount, AbilityNames.Count, left, "상태 능력치: 스트레스, 지침, 병을 버티는 힘", false);
+        }
+
+        void AbilityGroup(AbilityRules rules, AbilityScores s, int from, int to, int left, string caption, bool withSkills)
+        {
+            var head = Row(from == 0 ? "⑨" : "");
+            Text(head, $"{caption} (남은 점수 {left})");
+            if (from == 0) Dice(head, () => PersonaDice.Abilities(draft, tables, rng));
+
+            for (int i = from; i < to; i++)
+            {
+                var a = (Ability)i;
+                var row = Row("");
+                Text(row, $"{AbilityNames.Of(a)} {s[a]}");
+                var minus = SmallButton(row, "−", () => { s[a]--; Touched(rules, s); });
+                minus.SetEnabled(s[a] > rules.makingRange.x);
+                var plus = SmallButton(row, "+", () => { s[a]++; Touched(rules, s); });
+                plus.SetEnabled(left > 0 && s[a] < rules.makingRange.y);
+                Text(row, AbilityNames.Band(s[a]));
+                if (!withSkills) continue;
+
+                // 이 능력치 계열의 기능들. 계열 점수 = 능력치 / 2, 한 기능의 한계 = 능력치 / 3 [가정 O-018]
+                int points = rules.PointsFor(s[a]) - rules.SpentOn(s, a);
+                Text(row, $"| 기능 점수 {points}:");
+                foreach (var def in rules.skills)
+                {
+                    if (def.ability != a) continue;
+                    int cap = rules.CapFor(def, s[a]);
+                    int level = s.Skill(def.name);
+                    Text(row, cap == 0 ? $"{def.name} (계열 {def.require} 필요)" : $"{def.name} {level}/{cap}");
+                    if (cap == 0) continue;
+                    var sm = SmallButton(row, "−", () => { s.SetSkill(def.name, level - 1); Touched(rules, s); });
+                    sm.SetEnabled(level > 0);
+                    var sp = SmallButton(row, "+", () => { s.SetSkill(def.name, level + 1); Touched(rules, s); });
+                    sp.SetEnabled(points > 0 && level < cap);
+                }
+            }
+        }
+
+        // 손으로 고친 순간부터 내 값이다(시작할 때 주사위로 덮지 않는다). 능력치를 내리면 넘친 기능을 깎는다.
+        void Touched(AbilityRules rules, AbilityScores s)
+        {
+            s.set = true;
+            rules.Clamp(s);
         }
 
         bool Conflicts(Trait t, int slot)
@@ -379,11 +440,14 @@ namespace Improv.UI
 
         void Dice(VisualElement parent, Action roll) => Small(parent, "굴림", roll);
 
-        void Small(VisualElement parent, string text, Action act)
+        void Small(VisualElement parent, string text, Action act) => SmallButton(parent, text, act);
+
+        Button SmallButton(VisualElement parent, string text, Action act)
         {
             var b = new Button(() => { act(); Rebuild(); }) { text = text };
             b.AddToClassList("mk-small");
             parent.Add(b);
+            return b;
         }
     }
 }

@@ -30,6 +30,7 @@
 - NPC 시트는 판이 시작할 때 `CastGenerator`가 만든다(목록 `Assets/Data/Generation/CharacterTables.asset`, GDD R-026). 겹치는 과거의 진실은 생성기가 들고 있고, NPC의 LLM에는 자기 판본만 넘긴다. 시험할 때는 `usePreset`(기본 켬)으로 미리 써 둔 판(`Assets/Data/Characters/TestCast/TestCastPreset.asset`)을 로딩 없이 쓰고, 생성을 보려면 끈다. 손으로 쓴 옛 시트를 쓰려면 CastGenerator를 끈다.
 - 관계도는 `Characters/RelationBook`(GDD R-027): 호감 = 묵은 감정 + 까닭 붙은 수정치, 애정 = 드러난 면모, 자기 자신은 "이제까지의 나". 값은 LLM이 JSON `relation`으로 고르고 코드는 기록·흐려짐·상쇄만 한다.
 - 플레이어 캐릭터 메이킹(GDD R-029): `CastGenerator.playerMaking`이 켜져 있으면 판 시작 때 `UI/CharacterMakingWindow`가 뜨고, 다 쓴 답안지(`PersonaDraft`)가 NPC와 같은 `CastMember`가 되어 `Player/PlayerPersona`에 들어간 뒤 생성이 시작된다. 보기와 문장 틀은 `Assets/Data/Generation/MakingTemplates.asset`. 메이킹을 건너뛰고 시험하려면 playerMaking을 끈다.
+- 능력치와 기능(GDD R-031)은 `Characters/CharacterAbilities`(모든 캐릭터에 붙음, 규칙은 `Assets/Data/Abilities/AbilityRules.asset`). 바탕값은 판 시작 때 생성기·메이킹이 넣고, 부상·질병은 까닭 붙은 수정치(`AddModifier`/`RemoveModifiers`)로 얹는다. 효과는 읽는 쪽(`CharacterVitals`, `Vision`)이 `Factor`로 정하고, 주사위로 성공·실패를 정하지 않는다. 새 캐릭터에도 붙이고 rules를 연결한다.
 - 관계도 창은 `UI/RelationChartWindow`(R, GDD R-028): 플레이어의 짐작(`Player/PlayerRelationNotes`, 느낌 표식 + 메모)과 개발자 보기(NPC의 진짜 마음). 창이 열린 동안 끌 플레이어 조작은 `Open()`의 목록에 있다. 새 플레이어 입력 스크립트를 만들면 그 목록에도 넣는다.
 - UI 위의 클릭이 월드로 넘어가지 않게 막을 요소에는 USS 클래스 `ui-solid`를 붙인다 (`UiPointer`).
 - UI는 UI Toolkit(UXML/USS, `Assets/UI`)으로 만들고 글꼴은 Noto Sans KR을 쓴다. 튜닝 데이터(캐릭터 시트, LLM 설정)는 ScriptableObject 에셋(`Assets/Data`)에 둔다.

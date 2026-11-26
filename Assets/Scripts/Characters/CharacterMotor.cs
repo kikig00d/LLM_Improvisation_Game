@@ -43,6 +43,8 @@ namespace Improv.Characters
         // 지난 물리 틱 동안 실제로 움직인 속도 (유닛/초). 벽에 막혀 있으면 0에 가깝다.
         // 애니메이션, 나중에 NPC의 "누가 뛰어갔다" 같은 인지에 쓴다.
         public Vector2 Velocity { get; private set; }
+        /// <summary>걷는 속도 배율. 무거운 것을 들면 CharacterVitals가 근력·운반에 따라 낮춘다 (R-008, R-031a).</summary>
+        public float SpeedMultiplier { get; set; } = 1f;
 
         // 조종자가 원하는 방향. 벽에 막혀 실제로 못 움직여도 이 값은 남는다.
         public Vector2 MoveInput => moveInput;
@@ -107,7 +109,7 @@ namespace Improv.Characters
         void Walk(float horizontal)
         {
             // Unity 6에서 Rigidbody2D.velocity는 linearVelocity로 이름이 바뀌었다.
-            body.linearVelocity = new Vector2(horizontal * moveSpeed, 0f);
+            body.linearVelocity = new Vector2(horizontal * moveSpeed * SpeedMultiplier, 0f);
         }
 
         void ApplyWalkingConstraints()
