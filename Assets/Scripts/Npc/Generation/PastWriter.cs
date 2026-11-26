@@ -132,10 +132,22 @@ namespace Improv.Npc.Generation
 
         static string Describe(CastMember m)
         {
+            // 프리셋 NPC는 표의 배경 대신 손으로 쓴 소개 글만 있다.
+            if (!string.IsNullOrWhiteSpace(m.profileOverride)) return $"{m.name}. {m.profileOverride}";
             var traits = new List<string>();
             foreach (var t in m.traits) traits.Add(t.name);
-            return $"{m.name}, {m.age}세 {(m.female ? "여자" : "남자")}. 직업: {m.adulthood.title}({m.adulthood.story}) 어린 시절: {m.childhood.title}({m.childhood.story}) " +
-                   $"성격: {string.Join(", ", traits)}. 믿는 것: {string.Join(" / ", m.beliefs)}";
+            var sb = new StringBuilder($"{m.name}, {m.age}세 {(m.female ? "여자" : "남자")}. 직업: {m.adulthood?.title}({m.adulthood?.story}) 어린 시절: {m.childhood?.title}({m.childhood?.story}) " +
+                                       $"성격: {string.Join(", ", traits)}. 믿는 것: {string.Join(" / ", m.beliefs)}");
+            // 메이킹에서 플레이어가 쓴 설정. 과거는 이것과 어긋나면 안 된다 (사용자 2026-11-26: 큰 줄기는 플레이어 설정에 맞춘다).
+            if (!string.IsNullOrWhiteSpace(m.family)) sb.Append($". 집에서: {m.family}");
+            if (m.personal.Count > 0)
+            {
+                sb.Append($". {m.name}의 지난 일(이것과 어긋나게 쓰지 않는다):");
+                // 개인 서사의 주어는 "나"지만, 여기서는 두 사람을 함께 적으므로 이름으로 바꿔 찍는다.
+                foreach (var e in m.personal)
+                    sb.Append(" / ").Append(PastFormat.Line(new PastEvent { when = e.when, where = e.where, who = m.name, what = e.what, how = e.how, why = e.why }));
+            }
+            return sb.ToString();
         }
 
         static bool TryParse(string text, CastMember a, CastMember b, out List<PastEvent> truth, out PastVersion va, out PastVersion vb)

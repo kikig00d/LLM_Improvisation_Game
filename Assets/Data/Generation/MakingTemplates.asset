@@ -1,0 +1,95 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 69afc50e5b72d514ca7449cf4849dd0e, type: 3}
+  m_Name: MakingTemplates
+  m_EditorClassIdentifier: Assembly-CSharp::Improv.Npc.Generation.MakingTemplates
+  familyPlaces:
+  - "\uBD80\uBAA8\uB2D8\uC758 \uC678\uB3D9{\uC544\uB4E4|\uB538}"
+  - "\uC0BC \uB0A8\uB9E4\uC758 \uB9CF{\uC544\uB4E4|\uB538}"
+  - "\uC0BC \uB0A8\uB9E4\uC758 \uB9C9\uB0B4"
+  - "\uD640\uC5B4\uBA38\uB2C8\uC758 \uD558\uB098\uBFD0\uC778 {\uC544\uB4E4|\uB538}"
+  - "\uB450 \uC544\uC774\uC758 {\uC544\uBC84\uC9C0|\uC5B4\uBA38\uB2C8}"
+  - "{\uC544\uB0B4\uB97C|\uB0A8\uD3B8\uC744} \uBA3C\uC800 \uBCF4\uB0B8 {\uD640\uC544\uBE44|\uACFC\uBD80}"
+  - "\uAC13 \uACB0\uD63C\uD55C {\uB0A8\uD3B8|\uC544\uB0B4}"
+  - "\uC5F0\uB77D \uB04A\uAE34 \uC9D1\uC548\uC758 {\uC544\uB4E4|\uB538}"
+  - "\uBD80\uBAA8\uB2D8\uC744 \uBAA8\uC2DC\uACE0 \uC0AC\uB294 {\uC544\uB4E4|\uB538}"
+  - "\uD63C\uC790 \uC0AC\uB294 \uC0AC\uB78C"
+  times:
+  - "\uC720\uB144\uAE30"
+  - "\uCCAD\uC18C\uB144\uAE30"
+  - "\uC2A4\uBB34 \uC0B4 \uBB34\uB835"
+  - "\uC2ED \uB144 \uC804"
+  - "\uBA87 \uB144 \uC804"
+  - "\uC791\uB144"
+  - "\uC0B0\uC7A5\uC5D0 \uC624\uAE30 \uC9C1\uC804"
+  whatTemplates:
+  - "{\uB204\uAD6C}\uC5D0\uAC8C {\uBB34\uC5C7}\uC744(\uB97C) \uBC30\uC6C0"
+  - "{\uBB34\uC5C7}\uC744(\uB97C) \uC783\uC74C"
+  - "{\uB204\uAD6C}\uC640(\uACFC) {\uBB34\uC5C7} \uB54C\uBB38\uC5D0 \uB2E4\uD23C"
+  - "{\uB204\uAD6C}\uC744(\uB97C) \uB5A0\uB098\uBCF4\uB0C4"
+  - "{\uBB34\uC5C7}\uC744(\uB97C) \uADF8\uB9CC\uB460"
+  - "{\uBB34\uC5C7}\uC744(\uB97C) \uCC98\uC74C \uC2DC\uC791\uD568"
+  - "{\uB204\uAD6C}\uC5D0\uAC8C {\uBB34\uC5C7}\uC744(\uB97C) \uBE5A\uC9D0"
+  - "{\uB204\uAD6C}\uC744(\uB97C) {\uBB34\uC5C7}\uC5D0\uC11C \uB3C4\uC6C0"
+  - "{\uBB34\uC5C7}\uC744(\uB97C) \uBAB0\uB798 \uC228\uAE40"
+  - "{\uB204\uAD6C}\uC640(\uACFC) \uC57D\uC18D\uD568"
+  - "{\uACF3}(\uC73C)\uB85C \uC774\uC0AC\uD568"
+  howTemplates:
+  - "\uD63C\uC790\uC11C"
+  - "\uBAB0\uB798"
+  - "{\uB204\uAD6C}\uC758 \uB3C4\uC6C0\uC73C\uB85C"
+  - "{\uBB34\uC5C7}\uC744(\uB97C) \uD314\uC544\uC11C"
+  - "\uC6B8\uBA74\uC11C"
+  - "\uC5B5\uC9C0\uB85C"
+  - "{\uBB34\uC5C7}\uC744(\uB97C) \uD551\uACC4\uB85C"
+  - "\uC544\uBB34 \uB9D0 \uC5C6\uC774"
+  whyTemplates:
+  - "{\uBB34\uC5C7} \uB54C\uBB38\uC5D0"
+  - "{\uB204\uAD6C}\uC744(\uB97C) \uC704\uD574"
+  - "{\uBB34\uC5C7}\uC774(\uAC00) \uC2EB\uC5B4\uC11C"
+  - "{\uBB34\uC5C7}\uC744(\uB97C) \uAC16\uACE0 \uC2F6\uC5B4\uC11C"
+  - "{\uB204\uAD6C}\uC5D0\uAC8C \uC778\uC815\uBC1B\uACE0 \uC2F6\uC5B4\uC11C"
+  - "\uC5B4\uCA54 \uC218 \uC5C6\uC5B4\uC11C"
+  - "{\uB204\uAD6C}\uC774(\uAC00) \uC2DC\uCF1C\uC11C"
+  places:
+  - "\uACE0\uD5A5 \uBC14\uB2F7\uAC00"
+  - "\uC2DC\uC7A5 \uACE8\uBAA9"
+  - "\uD68C\uC0AC"
+  - "\uAD70\uB300"
+  - "\uBCD1\uC6D0"
+  - "\uD559\uAD50"
+  - "\uC0B0\uACE8 \uB9C8\uC744"
+  - "\uB3C4\uC2DC \uB2E8\uCE78\uBC29"
+  - "\uC791\uC740 \uAC00\uAC8C"
+  - "\uAE30\uCC28\uC5ED"
+  blankWords:
+  - "\uB204\uAD6C: \uD560\uBA38\uB2C8, \uC544\uBC84\uC9C0, \uC5B4\uBA38\uB2C8, \uD615,
+    \uC5B8\uB2C8, \uB3D9\uC0DD, \uC61B \uCE5C\uAD6C, \uC120\uBC30, \uC120\uC0DD\uB2D8,
+    \uC774\uC6C3, \uCCAB\uC0AC\uB791, \uC0AC\uC7A5\uB2D8"
+  - "\uBB34\uC5C7: \uB3C8, \uC57D\uC18D, \uAC00\uAC8C, \uC2DC\uD5D8, \uC77C\uC790\uB9AC,
+    \uD3B8\uC9C0, \uC9D1, \uAFC8, \uC694\uB9AC, \uC0AC\uC9C4, \uC6B4\uB3D9, \uBE5A,
+    \uC0DD\uC120 \uC190\uC9C8"
+  - "\uACF3: \uC11C\uC6B8, \uBC14\uB2F7\uAC00, \uC2DC\uACE8, \uC678\uAD6D, \uC0B0\uACE8,
+    \uD070 \uB3C4\uC2DC"
+  nameMaxLength: 6
+  blankMaxLength: 8
+  placeMaxLength: 10
+  personalLines: 3
+  llmExample: "{\"name\":\"\uBC31\uC2B9\uD638\",\"age\":41,\"gender\":\"\uB0A8\uC790\",\"childhood\":\"\uBC14\uB2F7\uAC00
+    \uC544\uC774\",\"adulthood\":\"\uC694\uB9AC\uC0AC\",\"family\":\"\uB450 \uC544\uC774\uC758
+    {\uC544\uBC84\uC9C0|\uC5B4\uBA38\uB2C8}\",\"arrival\":\"\uC26C\uB824\uACE0 \uBBF8\uB9AC
+    \uC608\uC57D\uD558\uACE0 \uC654\uB2E4.\",\"traits\":[\"\uC218\uB2E4\uC7C1\uC774\",\"\uB2E4\uD608\uC9C8\",\"\uCC45\uC784\uAC10\"],\"beliefs\":[\"\uBC1B\uC740
+    \uB9CC\uD07C \uB3CC\uB824\uC918\uC57C \uD55C\uB2E4. \uC740\uD61C\uB4E0 \uC6D0\uD55C\uC774\uB4E0.\",\"\uC57D\uD55C
+    \uC0AC\uB78C\uC740 \uC9C0\uCF1C \uC918\uC57C \uD55C\uB2E4.\"],\"personal\":[{\"when\":\"\uCCAD\uC18C\uB144\uAE30\",\"where\":\"\uACE0\uD5A5
+    \uBC14\uB2F7\uAC00\",\"what\":{\"t\":0,\"b\":[\"\uC544\uBC84\uC9C0\",\"\uC0DD\uC120
+    \uC190\uC9C8\"]},\"how\":{\"t\":-1,\"b\":[]},\"why\":{\"t\":-1,\"b\":[]}},{\"when\":\"\uBA87
+    \uB144 \uC804\",\"where\":\"\uC791\uC740 \uAC00\uAC8C\",\"what\":{\"t\":4,\"b\":[\"\uC2DD\uB2F9\"]},\"how\":{\"t\":-1,\"b\":[]},\"why\":{\"t\":0,\"b\":[\"\uBE5A\"]}},{\"when\":\"\",\"where\":\"\",\"what\":{\"t\":-1,\"b\":[]},\"how\":{\"t\":-1,\"b\":[]},\"why\":{\"t\":-1,\"b\":[]}}],\"bond\":\"\"}"

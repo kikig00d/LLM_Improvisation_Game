@@ -1,0 +1,76 @@
+/* 캐릭터 메이킹 창 (R-029). 관계도 창(Relations.uss)과 같은 색을 쓴다. */
+
+.making-overlay {
+    -unity-font-definition: url("project://database/Assets/Fonts/NotoSansKR/NotoSansKR-Regular.otf");
+    position: absolute;
+    left: 0; top: 0; right: 0; bottom: 0;
+    background-color: rgb(8, 10, 16);
+    align-items: center;
+    justify-content: center;
+    display: none;              /* 처음에는 숨김. C#이 연다 */
+}
+
+.making-window {
+    width: 86%;
+    height: 90%;
+    padding: 14px 20px;
+    background-color: rgb(16, 20, 30);
+    border-radius: 12px;
+    border-width: 1px;
+    border-color: rgba(255, 255, 255, 0.15);
+}
+
+.making-header { margin-bottom: 8px; }
+.making-title { color: rgb(235, 238, 245); font-size: 28px; -unity-font-style: bold; }
+.making-subtitle { color: rgb(150, 156, 170); font-size: 15px; }
+
+.making-form { flex-grow: 1; }
+
+.mk-section { color: rgb(150, 156, 170); font-size: 16px; margin-top: 14px; margin-bottom: 4px; -unity-font-style: bold; }
+.mk-row { flex-direction: row; flex-wrap: wrap; align-items: center; margin: 3px 0; }
+.mk-num { color: rgb(255, 225, 120); font-size: 18px; width: 30px; }
+.mk-text { color: rgb(235, 238, 245); font-size: 18px; margin: 0 2px; }
+.mk-caption { color: rgb(150, 156, 170); font-size: 16px; width: 64px; }
+
+/* 보기 고르는 칸과 짧게 치는 칸. 시험지 답란처럼 밝게 */
+.mk-drop { font-size: 17px; min-width: 120px; margin: 0 2px; }
+.mk-drop .unity-base-popup-field__input { background-color: rgba(255, 255, 255, 0.92); color: rgb(20, 20, 26); }
+.mk-field { font-size: 17px; width: 120px; margin: 0 2px; }
+.mk-field > .unity-text-field__input { background-color: rgba(255, 255, 255, 0.92); color: rgb(20, 20, 26); }
+.mk-field--name { width: 100px; }
+.mk-field--place { width: 150px; }
+
+.mk-small { font-size: 14px; margin: 0 2px; padding: 2px 8px; color: rgb(225, 228, 235); background-color: rgba(255, 255, 255, 0.08); }
+.mk-pick-button { font-size: 16px; color: rgb(255, 225, 120); background-color: rgba(255, 225, 120, 0.10); border-color: rgba(255, 225, 120, 0.4); }
+
+.mk-line {
+    margin: 6px 0;
+    padding: 6px 10px;
+    border-radius: 8px;
+    background-color: rgba(255, 255, 255, 0.04);
+}
+
+/* 문장 틀 다이얼: 옆으로 넘기며 고른다 */
+.mk-dial { height: 66px; margin: 2px 0 6px 64px; }
+.mk-dial .unity-scroll-view__content-container { flex-direction: row; }
+.mk-chip {
+    font-size: 16px;
+    min-height: 34px;
+    flex-shrink: 0;             /* 줄어들지 않고 옆으로 넘친다. 다이얼처럼 넘겨서 본다 */
+    margin: 2px 4px;
+    padding: 4px 12px;
+    border-radius: 14px;
+    color: rgb(235, 238, 245);
+    background-color: rgb(46, 54, 74);
+    border-color: rgba(255, 255, 255, 0.2);
+}
+.mk-chip:hover { background-color: rgb(64, 76, 104); }
+
+.making-footer { flex-direction: row; align-items: center; justify-content: flex-end; margin-top: 10px; }
+.making-status { flex-grow: 1; color: rgb(150, 156, 170); font-size: 16px; white-space: normal; }
+.footer-button { font-size: 18px; padding: 6px 14px; margin-left: 8px; }
+.start-button { -unity-font-style: bold; color: rgb(20, 20, 26); background-color: rgb(255, 225, 120); }
+
+/* 답란 글자는 진하게, 아직 안 친 칸의 안내 글(placeholder)은 흐리게 */
+.mk-field .unity-text-element, .mk-drop .unity-text-element { color: rgb(20, 20, 26); }
+.mk-field .unity-base-text-field__input--placeholder > .unity-text-element { color: rgb(130, 134, 145); }

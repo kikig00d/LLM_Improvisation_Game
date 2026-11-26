@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using Improv.Characters;
 using Improv.Npc;
+using Improv.Npc.Generation;
 using Improv.Player;
 using Improv.World;
 using UnityEngine;
@@ -14,6 +15,7 @@ namespace Improv.UI
     /// - 플레이어 보기: 플레이어가 본 적 있는 사람만 칸으로 나온다(P-1, P-3). 칸 둘을 차례로 눌러 "A가 B를 어떻게 여기나"를
     ///   느낌 표식과 메모로 적는다. 플레이어의 짐작일 뿐, NPC의 진짜 마음과는 따로다.
     /// - 개발자 보기: 에디터와 개발 빌드에서만. NPC의 진짜 호감·애정 숫자(RelationBook)를 주황 화살표로 겹쳐 그린다.
+    /// - 나: 메이킹으로 만든 내 캐릭터(R-029)와 내가 기억하는 겹치는 과거(내 판본)를 읽는다 (R-028d).
     /// R로 열고 닫는다(Esc도 닫음). 열려 있는 동안 시계를 멈추고 플레이어 조작을 끈다.
     /// </summary>
     [RequireComponent(typeof(UIDocument))]
@@ -49,7 +51,10 @@ namespace Improv.UI
         RelationGraphElement graph;
         Label pairLabel, hintLabel;
         TextField memoField;
-        Button devButton, swapButton, clearButton;
+        Button devButton, swapButton, clearButton, meButton;
+        ScrollView mePanel;
+        Label meText;
+        bool meView;
         InputAction toggleAction;
 
         public readonly PlayerRelationNotes notes = new();
@@ -92,6 +97,7 @@ namespace Improv.UI
             devButton = root.Q<Button>("dev-button");
             swapButton = root.Q<Button>("swap-button");
             clearButton = root.Q<Button>("clear-button");
+            meButton = root.Q<Button>("me-button");
             if (overlay == null || graphArea == null || memoField == null)
             {
                 Debug.LogError("[RelationChartWindow] UXML에서 relations-overlay, graph-area, memo를 찾지 못했습니다.", this);
@@ -136,7 +142,38 @@ namespace Improv.UI
 #else
             devButton.style.display = DisplayStyle.None;   // 출시 빌드에서는 진짜 마음을 볼 수 없다
 #endif
+            // '나' 칸: 관계도 몸통 자리에 글을 띄운다. 그래프와 편집 칸은 그동안 숨긴다.
+            mePanel = new ScrollView { name = "me-panel" };
+            mePanel.AddToClassList("me-panel");
+            meText = new Label();
+            meText.AddToClassList("me-text");
+            mePanel.Add(meText);
+            graphArea.parent.Add(mePanel);
+            if (meButton != null) meButton.clicked += () => { meView = !meView; ShowMe(); };
+            ShowMe();
             SetVisible(false);
+        }
+
+        void ShowMe()
+        {
+            mePanel.style.display = meView ? DisplayStyle.Flex : DisplayStyle.None;
+            graphArea.style.display = meView ? DisplayStyle.None : DisplayStyle.Flex;
+            editor.style.display = meView ? DisplayStyle.None : DisplayStyle.Flex;
+            if (meButton != null) meButton.text = meView ? "관계도" : "나";
+            if (!meView) { graphArea.schedule.Execute(Rebuild); return; }
+            var persona = FindFirstObjectByType<PlayerPersona>();
+            if (persona == null || !persona.Ready) { meText.text = "아직 만든 캐릭터가 없습니다 (메이킹을 끈 판)."; return; }
+            var sb = new System.Text.StringBuilder();
+            foreach (string line in PersonaDraft.Sentences(persona.Member)) sb.AppendLine(line);
+            if (persona.Member.personal.Count > 0)
+            {
+                sb.AppendLine().AppendLine("지난 일");
+                foreach (var e in persona.Member.personal) sb.Append("- ").AppendLine(PastFormat.Line(e));
+            }
+            if (!string.IsNullOrWhiteSpace(persona.Member.bond)) sb.AppendLine().AppendLine($"산장에 온 사람 중 한 명은 내 {persona.Member.bond}이다.");
+            // 내 판본만 보인다. 상대의 판본이나 진실은 모른다 (P-3).
+            foreach (string memory in persona.memories) sb.AppendLine().AppendLine(memory);
+            meText.text = sb.ToString();
         }
 
         VisualElement Layer(string layerName)
@@ -196,6 +233,8 @@ namespace Improv.UI
             if (dialogueWindow != null && dialogueWindow.IsOpen) return;   // 대화 입력 중 R은 글자다
             var clock = GameClock.Instance;
             if (clock != null && clock.IsPlayerSleeping) return;              // 자는 동안은 열지 않는다 [가정]
+            var cast = CastGenerator.Instance;
+            if (cast != null && (cast.WaitingForPlayer || cast.IsGenerating)) return;   // 메이킹과 생성 중에는 아직 볼 사람이 없다
             IsOpen = true;
             CollectSeen();
 
@@ -216,6 +255,7 @@ namespace Improv.UI
             firstPick = -1;
             SetVisible(true);
             Select(-1, -1);
+            ShowMe();
             graphArea.schedule.Execute(Rebuild);   // 크기가 정해진 다음 프레임에 칸을 놓는다
         }
 
