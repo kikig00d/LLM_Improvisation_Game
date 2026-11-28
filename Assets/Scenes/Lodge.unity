@@ -5246,6 +5246,10 @@ MonoBehaviour:
   firstThinkDelay: {x: 1, y: 6}
   noticeAfterUnseen: 120
   minSelfThinkInterval: 8
+  wordList: {fileID: 4900000, guid: a7fc4add028801e4aafd3e4f4da0f907, type: 3}
+  grammarBound: 1
+  boundMinTokens: 320
+  boundMaxWords: 12
 --- !u!114 &285436538
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -35092,6 +35096,10 @@ MonoBehaviour:
   firstThinkDelay: {x: 1, y: 6}
   noticeAfterUnseen: 120
   minSelfThinkInterval: 8
+  wordList: {fileID: 4900000, guid: a7fc4add028801e4aafd3e4f4da0f907, type: 3}
+  grammarBound: 1
+  boundMinTokens: 320
+  boundMaxWords: 12
 --- !u!114 &1235027955
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -46442,6 +46450,10 @@ MonoBehaviour:
   firstThinkDelay: {x: 1, y: 6}
   noticeAfterUnseen: 120
   minSelfThinkInterval: 8
+  wordList: {fileID: 4900000, guid: a7fc4add028801e4aafd3e4f4da0f907, type: 3}
+  grammarBound: 1
+  boundMinTokens: 320
+  boundMaxWords: 12
 --- !u!114 &1931264162
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -142,7 +142,10 @@ namespace Improv.Llm
             if (options?.Seed != null)
                 json = json.Insert(json.Length - 1, $",\"seed\":{options.Seed.Value}");
             // OpenAI 형식의 "JSON으로만 답하기" 옵션. 서버가 문법에 맞는 JSON만 나오게 막아 준다.
-            if (jsonMode)
+            // 스키마가 있으면 더 좁게: 모양뿐 아니라 고를 수 있는 값(enum)까지 서버가 막는다 (R-032c, Ollama에서 확인).
+            if (!string.IsNullOrEmpty(options?.JsonSchema))
+                json = json.Insert(json.Length - 1, ",\"response_format\":{\"type\":\"json_schema\",\"json_schema\":{\"name\":\"reply\",\"strict\":true,\"schema\":" + options.JsonSchema + "}}");
+            else if (jsonMode)
                 json = json.Insert(json.Length - 1, ",\"response_format\":{\"type\":\"json_object\"}");
             return json;
         }

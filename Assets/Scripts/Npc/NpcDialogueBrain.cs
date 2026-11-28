@@ -6,6 +6,7 @@ using System.Threading;
 using Improv.Characters;
 using Improv.Characters.Speech;
 using Improv.Llm;
+using Improv.UI;
 using Improv.World;
 using UnityEngine;
 
@@ -49,6 +50,16 @@ namespace Improv.Npc
         [Tooltip("혼자 하는 생각(말을 들은 때 말고) 사이의 최소 간격(게임 초). 행동 → 생각 → 행동이 LLM 호출 고리가 되지 않게 (P-4)")]
         [SerializeField] float minSelfThinkInterval = 8f;
 
+        [Header("허용 문법 사전 (R-032, O-019 [가정])")]
+        [Tooltip("Assets/Data/Dialogue/Words.txt. 플레이어 대화창과 같은 사전")]
+        [SerializeField] TextAsset wordList;
+        [Tooltip("켜면 NPC도 사전 단어로만 말하고, 들은 말에 단어 뜻과 이상한 말 메모가 붙는다. 끄면 예전처럼 자유롭게 말한다(비교 시험용, R-032c)")]
+        [SerializeField] bool grammarBound = true;
+        [Tooltip("묶은 답은 속뜻과 단어 목록을 함께 써서 길다. 답 길이가 이보다 짧게 잡혀 있으면 이만큼 늘린다(잘린 JSON 방지)")]
+        [SerializeField] int boundMinTokens = 320;
+        [Tooltip("NPC 한 번 말의 최대 칸 수(단어 + 조사 + 부호). O-019")]
+        [SerializeField] int boundMaxWords = 12;
+
         // =====================================================================
         // #2. 상태
         // =====================================================================
@@ -77,6 +88,10 @@ namespace Improv.Npc
         ILlmClient client;
         RelationBook relations;                 // 사람(과 이제까지의 나)에 대한 마음 (I-12, R-027). Start에서 시트의 묵은 감정으로 채운다
         readonly StringBuilder relationText = new();
+        WordDictionary grammar;                 // 허용 문법 사전 (R-032). grammarBound가 켜져 있을 때만 만든다
+        string grammarSchema;                   // 단어 enum이 든 JSON 스키마. 이름이 바뀌면 다시 만든다
+        string grammarSchemaNames;
+        bool Bound => grammarBound && grammar != null;
 
         // 단기 기억: 들은 말과 내가 한 말, 그리고 그때의 시각. 시간이 지나면 잊는다 (R-016d).
         // (ChatMessage, float) 는 튜플: 이름 없는 작은 struct를 그 자리에서 만드는 문법.
@@ -145,6 +160,12 @@ namespace Improv.Npc
             speaker.SetDisplayName(sheet.displayName);   // 시트의 이름은 "처음 이름". 그 뒤로는 신원(CharacterIdentity)이 이름의 주인이다
             client = llm.CreateClient();
             if (attention != null) attention.Init(sheet.baselineAttention);
+
+            if (grammarBound)
+            {
+                if (wordList == null) Debug.LogError($"[NpcDialogueBrain] '{name}'의 단어 사전(wordList)이 비어 있어 자유롭게 말합니다 (R-032).", this);
+                else grammar = WordDictionary.Parse(wordList.text);
+            }
         }
 
         /// <summary>
@@ -323,9 +344,14 @@ namespace Improv.Npc
                     // 이번에 들은 말 중 가장 작은 번호를 기준으로 한다. 플레이어 말(0)이 섞였으면 다시 처음부터 센다.
                     int depth = int.MaxValue;
                     bool heardSpeech = pending.Count > 0;   // 이번 차례에 남의 말을 들었나. 마음은 겪은 일로만 바뀐다 (I-12)
+                    if (Bound) RefreshGrammar();
                     foreach (var heard in pending)
                     {
-                        shortTerm.Add((ChatMessage.User($"{heard.SpeakerName}: {heard.Text}"), heard.Time));
+                        // R-032b, R-032d: 들은 말 아래에 단어 뜻(그래프 한 칸)과, 칸에 안 맞으면 이상한 말 메모를 붙인다.
+                        // 듣는 쪽도 글자만 받으므로 들린 그대로(○ 섞인 채)를 읽는다(P-1). ○가 든 조각은 사전에 없어 건너뛴다.
+                        string note = Bound ? GrammarReader.Annotate(grammar, heard.Text) : "";
+                        string heardLine = $"{heard.SpeakerName}: {heard.Text}" + (note.Length > 0 ? $"\n[사전 메모] {note}" : "");
+                        shortTerm.Add((ChatMessage.User(heardLine), heard.Time));
                         depth = Mathf.Min(depth, heard.ChainDepth);
                     }
                     pending.Clear();
@@ -353,11 +379,18 @@ namespace Improv.Npc
                     string attentionLevel = attention != null ? attention.LevelName : "보통";
                     if (vitals != null) vitals.DescribeFeelings(feelings); else feelings.Clear();
                     string actionContext = actions != null ? actions.DescribeForPrompt() : null;
-                    var messages = new List<ChatMessage> { ChatMessage.System(NpcPrompt.BuildSystem(sheet, speaker.DisplayName, room, VisibleNames(), longTerm, attentionValue, attentionLevel, feelings, actionContext, DescribeRelations(), abilities != null ? abilities.Describe() : null)) };
+                    var messages = new List<ChatMessage> { ChatMessage.System(NpcPrompt.BuildSystem(sheet, speaker.DisplayName, room, VisibleNames(), longTerm, attentionValue, attentionLevel, feelings, actionContext, DescribeRelations(), abilities != null ? abilities.Describe() : null, Bound)) };
                     // T-5: 집중도가 낮으면 최근 몇 줄만 떠올린다. 들은 말 자체는 단기 기억에 그대로 있다(흐려지지 않음).
                     int lines = attention != null ? attention.HistoryLines(shortTerm.Count) : shortTerm.Count;
                     for (int i = shortTerm.Count - lines; i < shortTerm.Count; i++) messages.Add(shortTerm[i].message);
                     LlmRequestOptions options = attention?.RequestOptions();
+                    if (Bound)
+                    {
+                        // R-032c: 서버가 사전 밖 단어를 내지 못하게 스키마로 묶는다. 속뜻까지 쓰니 답 길이를 넉넉히.
+                        options ??= new LlmRequestOptions();
+                        options.MaxTokens = Mathf.Max(options.MaxTokens, boundMinTokens);
+                        options.JsonSchema = grammarSchema;
+                    }
                     Debug.Log($"[NPC {speaker.DisplayName}] 집중도 {attentionValue:0.00}({attentionLevel}): 기억 {lines}줄, 생각 {options?.ReasoningEffort ?? "기본"}", this);
 
                     int ticket = ++requestTicket;
@@ -429,6 +462,8 @@ namespace Improv.Npc
             public string action;    // 할 행동: 가기, 줍기, 내려놓기, 먹기, 자기, 없음 (T-6)
             public string target;    // 행동의 대상 이름 (방, 사람, 물건)
             public RelationChange[] relation;   // 달라진 마음들 (I-12). 대부분 비어 있다
+            public string meaning;   // 묶은 답의 속뜻 (R-032c). 남에게 안 들린다
+            public string[] words;   // 묶은 답의 말. 사전 단어·조사·부호·이름만
         }
 
         [Serializable]
@@ -446,9 +481,16 @@ namespace Improv.Npc
             try
             {
                 var decision = JsonUtility.FromJson<NpcDecision>(json);
-                if (decision != null && (decision.say != null || decision.look_at != null)) return decision;
+                if (decision != null && (decision.say != null || decision.look_at != null || decision.words != null)) return decision;
             }
             catch (ArgumentException) { }
+
+            // 묶은 답에서 JSON이 깨졌으면(대개 길이에 잘림) 글 전체를 말하면 사전 밖 글자가 새어 나간다. 말하지 않는다.
+            if (Bound)
+            {
+                Debug.LogWarning($"[NPC {speaker.DisplayName}] 묶은 답이 JSON 형식이 아니라 말하지 않음: {json}", this);
+                return new NpcDecision { look_at = "" };
+            }
 
             // JSON이 깨졌으면 글 전체를 대사로 본다. 어떤 답이 왔는지는 LLM 디버그 로그에 남아 있다.
             Debug.LogWarning($"[NPC {speaker.DisplayName}] 답이 JSON 형식이 아니라 전체를 대사로 씀: {json}", this);
@@ -495,7 +537,7 @@ namespace Improv.Npc
                 actions.Execute(decision.action, decision.target);
 
             // 말하기. 말하지 않기로 고른 것도 선택이다.
-            string line = Clean(decision.say ?? "");
+            string line = Bound ? BoundLine(decision) : Clean(decision.say ?? "");
             if (line.Length == 0) { Debug.Log($"[NPC {speaker.DisplayName}] 대답하지 않기로 함", this); return; }
 
             // 품질 거르개: 반응을 고르는 게 아니라 깨진 답을 버리는 것이다. 버린 답은 콘솔에 남긴다.
@@ -529,6 +571,59 @@ namespace Improv.Npc
             string lasting = mod.lasting ? ", 오래 남음" : "";
             string cancel = mod.cancels != null ? $", '{mod.cancels.why}'와(과) 상쇄" : "";
             Debug.Log($"[NPC {speaker.DisplayName}] 마음: {who} {(affection ? "애정" : "호감")} {before} → {after} ({mod.why} {change.value:+0;-0}{lasting}{cancel})", this);
+        }
+
+        // =====================================================================
+        // #6. 허용 문법 사전 (R-032)
+        // =====================================================================
+
+        // 이름 단어를 지금 명단으로 채우고, 명단이 바뀌었으면 단어 enum 스키마를 다시 만든다.
+        void RefreshGrammar()
+        {
+            var names = new List<string>();
+            foreach (var c in CharacterIdentity.All) names.Add(c.DisplayName);
+            string key = string.Join("|", names);
+            if (grammarSchema != null && key == grammarSchemaNames) return;
+            grammar.SetNames(names);
+            grammarSchemaNames = key;
+            grammarSchema = BuildSchema();
+        }
+
+        // 답 JSON의 모양. words 칸만 사전 단어 enum으로 묶고 나머지는 지금과 같다.
+        // 속뜻(meaning)을 words 앞에 둔다. 서버는 칸 순서대로 쓰게 하므로 뜻을 먼저 정하고 단어로 옮기게 된다.
+        string BuildSchema()
+        {
+            var allowed = new List<string>(grammar.Words);
+            allowed.AddRange(grammar.Particles);
+            allowed.AddRange(grammar.Names);
+            var sb = new StringBuilder();
+            sb.Append("{\"type\":\"object\",\"properties\":{");
+            sb.Append("\"look_at\":{\"type\":\"string\"},\"meaning\":{\"type\":\"string\"},");
+            sb.Append("\"words\":{\"type\":\"array\",\"maxItems\":").Append(boundMaxWords).Append(",\"items\":{\"type\":\"string\",\"enum\":[");
+            for (int i = 0; i < allowed.Count; i++)
+                sb.Append(i > 0 ? "," : "").Append('"').Append(allowed[i].Replace("\\", "\\\\").Replace("\"", "\\\"")).Append('"');
+            sb.Append("]}},");
+            sb.Append("\"remember\":{\"type\":\"string\"},\"attention\":{\"type\":\"number\"},\"action\":{\"type\":\"string\"},\"target\":{\"type\":\"string\"},");
+            sb.Append("\"relation\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"properties\":{\"who\":{\"type\":\"string\"},\"kind\":{\"type\":\"string\"},\"why\":{\"type\":\"string\"},\"value\":{\"type\":\"integer\"},\"cancels\":{\"type\":\"string\"}},");
+            sb.Append("\"required\":[\"who\",\"kind\",\"why\",\"value\",\"cancels\"]}}},");
+            sb.Append("\"required\":[\"look_at\",\"meaning\",\"words\",\"remember\",\"attention\",\"action\",\"target\",\"relation\"]}");
+            return sb.ToString();
+        }
+
+        // 묶은 답의 단어들을 한 줄로. 서버가 이미 막지만 한 번 더 사전으로 거르고(다른 서버로 바꿨을 때 대비),
+        // 조사 노이즈는 JoinSentence가 버린다 (R-032a).
+        string BoundLine(NpcDecision decision)
+        {
+            if (!string.IsNullOrWhiteSpace(decision.meaning)) Debug.Log($"[NPC {speaker.DisplayName}] 속뜻: {decision.meaning}", this);
+            if (decision.words == null) return "";
+            var tokens = new List<string>();
+            foreach (string w in decision.words)
+            {
+                if (tokens.Count >= boundMaxWords) break;
+                if (w != null && grammar.Contains(w.Trim())) tokens.Add(w.Trim());
+                else Debug.Log($"[NPC {speaker.DisplayName}] 사전 밖 단어를 버림: {w}", this);
+            }
+            return WordDictionary.JoinSentence(tokens);
         }
 
         string Clean(string text)

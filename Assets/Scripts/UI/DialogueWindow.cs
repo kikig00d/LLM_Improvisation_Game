@@ -286,7 +286,15 @@ namespace Improv.UI
                 if (TypedText().Length > 0) ShowHint("사전에 없는 단어예요. 다른 말로 해 보세요.");
                 return;
             }
-            sentence.Add(candidates[selected]);
+            // 조사는 단어 바로 뒤에만 붙는다 (R-032a). 보낼 때 조용히 버려지기 전에 지금 알려 준다.
+            string pick = candidates[selected];
+            if (WordDictionary.IsParticle(pick) &&
+                (sentence.Count == 0 || WordDictionary.IsParticle(sentence[^1]) || WordDictionary.IsPunctuation(sentence[^1])))
+            {
+                ShowHint("조사는 단어 바로 뒤에만 붙일 수 있어요.");
+                return;
+            }
+            sentence.Add(pick);
             ClearInput();
             composition = "";
             RefreshAll();

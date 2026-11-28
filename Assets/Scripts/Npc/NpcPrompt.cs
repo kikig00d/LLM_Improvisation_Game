@@ -11,7 +11,8 @@ namespace Improv.Npc
     {
         public static string BuildSystem(NpcCharacterSheet sheet, string myName, string roomName, IReadOnlyList<string> visibleNames, IReadOnlyList<string> longTermNotes,
                                          float attention = 0.5f, string attentionLevel = "보통", IReadOnlyList<string> feelings = null,
-                                         string actionContext = null, string relationText = null, string abilityText = null)
+                                         string actionContext = null, string relationText = null, string abilityText = null,
+                                         bool grammarBound = false)
         {
             var sb = new StringBuilder();
             // 이름은 시트가 아니라 지금 이름을 쓴다. 개명하면 바뀐다 (F-17). 시트의 이름은 처음 이름일 뿐이다.
@@ -118,8 +119,20 @@ namespace Improv.Npc
             sb.AppendLine("  너를 욕하거나 칭찬하거나 도운 사람이 있으면 그 사람에 대한 마음을 꼭 적는다. (속생각)만 있을 때는 relation을 비운다.");
             sb.AppendLine();
             // R-016b, R-016d: 행동과 기억도 LLM이 고른다. 코드가 강제하지 않는다.
+            // R-032c: 묶은 답. 속뜻을 먼저 자유롭게 쓰고 그 뜻을 사전 단어로 옮긴다. 단어만 받으면 한 단어를 되풀이했다("어젯밤"×12).
+            if (grammarBound)
+            {
+                sb.AppendLine("말은 산장의 허용 단어로만 한다. 먼저 meaning에 하고 싶은 말의 속뜻을 자유롭게 적고(남에게 안 들린다),");
+                sb.AppendLine("words에 그 뜻을 허용 단어 목록으로 옮긴다. 조사는 ~을, ~에처럼 물결을 붙여 단어 바로 뒤에 하나만 쓴다. 동사는 기본형(가다, 있다)이다.");
+                sb.AppendLine("말하지 않으면 meaning과 words를 비운다. words는 짧게(열두 칸 안).");
+                sb.AppendLine("  보기: meaning \"나는 어젯밤 내 방에서 잤어\" → words [\"나\", \"~는\", \"어젯밤\", \"개인실\", \"~에서\", \"자다\", \".\"]");
+                sb.AppendLine("        meaning \"창고 열쇠가 없어졌어\" → words [\"창고\", \"열쇠\", \"~가\", \"없다\", \"!\"]");
+                sb.AppendLine("들은 말 아래의 [사전 메모]는 말이 아니라 그 단어들의 뜻풀이다. '이상한 말'이라고 적혀 있으면 말한 사람이 헛말했을 수 있으니 가까운 뜻 후보와 맥락으로 짐작한다.");
+            }
             sb.AppendLine("반드시 아래 JSON 한 개로만 답한다:");
-            sb.AppendLine("{\"look_at\": \"돌아볼 사람 이름. 돌아보지 않으면 빈 문자열\", \"say\": \"할 말. 말하지 않으면 빈 문자열\", \"remember\": \"꼭 기억할 짧은 메모. 없으면 빈 문자열\", \"attention\": 0~1 숫자, \"action\": \"가기/줍기/내려놓기/먹기/자기/없음 중 하나\", \"target\": \"행동의 대상 이름. 없으면 빈 문자열\", \"relation\": []}");
+            sb.AppendLine("{\"look_at\": \"돌아볼 사람 이름. 돌아보지 않으면 빈 문자열\", " + (grammarBound
+                ? "\"meaning\": \"하고 싶은 말의 속뜻\", \"words\": [허용 단어들], "
+                : "\"say\": \"할 말. 말하지 않으면 빈 문자열\", ") + "\"remember\": \"꼭 기억할 짧은 메모. 없으면 빈 문자열\", \"attention\": 0~1 숫자, \"action\": \"가기/줍기/내려놓기/먹기/자기/없음 중 하나\", \"target\": \"행동의 대상 이름. 없으면 빈 문자열\", \"relation\": []}");
             sb.AppendLine("relation의 한 칸 모양: {\"who\": \"사람 이름 또는 나\", \"kind\": \"호감 또는 애정\", \"why\": \"방금 일어난 일\", \"value\": 숫자, \"cancels\": \"풀어 주는 앞 까닭 또는 빈 문자열\"}");
             return sb.ToString();
         }
